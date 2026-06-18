@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Contact;
+use App\Models\Conversation;
+use Illuminate\Support\Facades\Log;
+
+use function Laravel\Ai\agent;
+
+/**
+ * Memproses pesan WhatsApp masuk untuk CRM:
+ *   1. Cari/buat Contact + Conversation.
+ *   2. Simpan pesan (sender: lead).
+ *   3. Jika ai_enabled: AI membalas otomatis lalu kirim via Fonnte.
+ */
+class WaInboundService
+{
+    public function __construct(
+        private readonly FonnteService $fonnte,
+    ) {
+    }
+
+    public function handleIncoming(string $phone, string $text, ?string $name = null): void
+    {
+        $phone = $this->fonnte->normalize($phone);
+
+        $contact = Contact::firstOrCreate(
+            ['phone' => $phone],
+            ['name' => $name ?: $phone, 'channel' => 'whatsapp', 'lead_since' => now()],
+        );
+
+        // Lengkapi nama bila sebelumnya hanya nomor.
+        if ($name && $contact->name === $phone) {
+            $contact->update(['name' => $name]);
+        }
+
+        $conv = $contact->conversations()->firstOrCreate(
+            ['channel' => 'whatsapp'],
+            ['stage' => 'baru', 'temperature' => 'cold', 'score' => 0, 'ai_enabled' => true],
+        );
+
+        $conv->messages()->create([
+            'direction' => 'in',
+            'sender' => 'lead',
+            'body' => $text,
+            'type' => 'text',
+        ]);
+        $conv->increment('unread');
+        $conv->update(['last_message_at' => now()]);
+
+        if ($conv->ai_enabled) {
+            $this->autoReply($conv);
+        }
+    }
+
+    protected function autoReply(Conversation $conv): void
+    {
+        $conv->load(['messages' => fn ($q) => $q->orderBy('id'), 'contact']);
+
+        $history = $conv->messages
+            ->map(fn ($m) => ($m->sender === 'lead' ? 'Calon pembeli' : 'Agen').': '.$m->body)
+            ->implode("\n");
+
+        $instructions = 'Anda asisten AI untuk agen properti premium Aterra Realty di Indonesia. '
+            .'Balas dalam Bahasa Indonesia yang sopan, hangat, dan profesional. Singkat (maks 2-3 kalimat). '
+            .'Tujuan: menjawab pertanyaan calon pembeli, mengkualifikasi kebutuhan, dan mengarahkan ke viewing/penjadwalan. '
+            .'Jangan mengarang fakta properti yang tidak ada di konteks; jika tidak tahu, tawarkan untuk mengeceknya.';
+
+        $prompt = "Riwayat percakapan:\n{$history}\n\n"
+            .'Tulis SATU balasan terbaik sebagai agen untuk pesan terakhir calon pembeli. Hanya teks balasannya, tanpa label.';
+
+        try {
+            $res = agent(instructions: $instructions)->prompt($prompt);
+            $reply = trim(preg_replace('/^["\']|["\']$/', '', $res->text));
+        } catch (\Throwable $e) {
+            Log::warning('wa.autoreply.ai_failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
+
+            return;
+        }
+
+        if ($reply === '') {
+            return;
+        }
+
+        $sent = $this->fonnte->sendMessage($conv->contact->phone, $reply);
+
+        if ($sent) {
+            $conv->messages()->create([
+                'direction' => 'out',
+                'sender' => 'ai',
+                'body' => $reply,
+                'type' => 'text',
+            ]);
+            $conv->update(['last_message_at' => now()]);
+        }
+    }
+}

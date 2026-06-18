@@ -1,0 +1,35 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views';
+
+@theme {
+    /* Tipografi Aterra */
+    --font-sans: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-serif: 'Cormorant Garamond', Georgia, serif;
+
+    /* Palet Aterra (earthy/hangat) */
+    --color-bg: #ECE6DC;
+    --color-sidebar: #201B17;
+    --color-sidebar-ink: #CFC6B8;
+    --color-sidebar-muted: #857B6C;
+    --color-accent: #B0552F;
+    --color-accent-soft: #C9A892;
+    --color-header: #F7F3EC;
+    --color-panel: #FBF8F2;
+    --color-panel-2: #F2EDE5;
+    --color-line: #E6DFD2;
+    --color-line-2: #E2DACB;
+    --color-ink: #2A241F;
+    --color-ink-strong: #241F1A;
+    --color-ink-muted: #8C8174;
+
+    /* Suhu lead */
+    --color-hot: #C0562C;
+    --color-warm: #C79A3A;
+    --color-cold: #9A958A;
+
+    /* Hijau status (positif) */
+    --color-success: #3F7A4B;
+}
