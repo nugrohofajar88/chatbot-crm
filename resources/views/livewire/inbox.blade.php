@@ -152,7 +152,15 @@
                     <div class="rounded-[14px] border border-[#EBE2D2] bg-white p-3.5">
                         <div class="mb-2.5 flex items-center justify-between">
                             <span class="text-[11px] font-semibold uppercase tracking-[1px] text-ink-muted">Skor Lead</span>
-                            <span class="font-serif text-[22px] font-bold" style="color: {{ $tempColor[$sel->temperature] }}">{{ $sel->score }}</span>
+                            <div class="flex items-center gap-2.5">
+                                <button wire:click="recomputeScore" wire:loading.attr="disabled" wire:target="recomputeScore"
+                                    class="flex items-center gap-1 text-[11px] font-semibold text-accent hover:underline disabled:opacity-50">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.5 9a9 9 0 0 1 14.8-3.4L23 10M1 14l4.7 4.4A9 9 0 0 0 20.5 15"/></svg>
+                                    <span wire:loading.remove wire:target="recomputeScore">Hitung ulang</span>
+                                    <span wire:loading wire:target="recomputeScore">Menghitung&hellip;</span>
+                                </button>
+                                <span class="font-serif text-[22px] font-bold" style="color: {{ $tempColor[$sel->temperature] }}">{{ $sel->score }}</span>
+                            </div>
                         </div>
                         @php $sb = $sel->latestScore; @endphp
                         @foreach (['budget' => 'Kesesuaian Budget', 'engagement' => 'Tingkat Engagement', 'urgency' => 'Urgensi'] as $key => $lbl)

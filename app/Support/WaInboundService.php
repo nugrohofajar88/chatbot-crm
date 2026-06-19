@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Contact;
 use App\Models\Conversation;
+use App\Models\Setting;
 use App\Support\AiPersona;
 use Illuminate\Support\Facades\Log;
 
@@ -19,6 +20,7 @@ class WaInboundService
 {
     public function __construct(
         private readonly FonnteService $fonnte,
+        private readonly LeadScoringService $scoring,
     ) {
     }
 
@@ -52,6 +54,18 @@ class WaInboundService
 
         if ($conv->ai_enabled) {
             $this->autoReply($conv);
+        }
+
+        // Auto-scoring di-throttle: saat lead pertama, lalu tiap kelipatan
+        // 'scoring_interval' (diatur operator). Nilai 0 = nonaktif (manual saja).
+        $interval = (int) Setting::get('scoring_interval', (string) config('aterra.scoring_interval', 3));
+        $leadCount = $conv->messages()->where('sender', 'lead')->count();
+        if ($interval >= 1 && ($leadCount === 1 || $leadCount % $interval === 0)) {
+            try {
+                $this->scoring->score($conv);
+            } catch (\Throwable $e) {
+                Log::warning('wa.autoscore.failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
+            }
         }
     }
 

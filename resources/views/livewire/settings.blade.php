@@ -1,5 +1,5 @@
 <div class="flex h-full flex-col">
-    <x-page-header title="Persona AI" subtitle="Atur kepribadian & aturan balasan asisten AI" />
+    <x-page-header title="Pengaturan AI" subtitle="Atur persona & perilaku asisten AI" />
 
     <div class="flex-1 overflow-y-auto p-[26px]">
         <div class="mx-auto max-w-[760px]">
@@ -31,6 +31,31 @@
                         Kembalikan ke Default
                     </button>
                     <span class="ml-auto text-[12px] text-ink-muted">Perubahan berlaku untuk balasan berikutnya.</span>
+                </div>
+            </div>
+
+            {{-- ===== Auto-Scoring ===== --}}
+            <div class="mt-4 rounded-[16px] border border-line bg-panel p-6">
+                <div class="mb-1 flex items-center gap-2">
+                    <div class="flex h-[26px] w-[26px] items-center justify-center rounded-[8px] bg-accent">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
+                    </div>
+                    <span class="font-serif text-[20px] font-semibold text-ink-strong">Auto-Scoring Lead</span>
+                </div>
+                <p class="mb-4 text-[13px] leading-relaxed text-ink-muted">
+                    Skor lead dihitung otomatis pada pesan pertama, lalu tiap <b class="text-ink">kelipatan</b> nilai ini.
+                    Contoh <b class="text-ink">3</b> = pesan lead ke-1, 3, 6, 9. Isi <b class="text-ink">0</b> untuk mematikan
+                    (skor hanya lewat tombol "Hitung ulang" di Inbox).
+                </p>
+                <div class="flex items-center gap-3">
+                    <label class="text-[13px] font-medium text-ink">Hitung tiap</label>
+                    <input type="number" min="0" max="50" wire:model="scoringInterval"
+                        class="w-20 rounded-[10px] border border-line-2 bg-white px-3 py-2 text-center text-[14px] text-ink outline-none focus:border-accent">
+                    <span class="text-[13px] text-ink-muted">pesan lead</span>
+                    <button wire:click="saveScoring"
+                        class="ml-auto rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">
+                        Simpan
+                    </button>
                 </div>
             </div>
 

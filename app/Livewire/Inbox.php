@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Conversation;
 use App\Support\AiPersona;
+use App\Support\LeadScoringService;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -95,6 +96,18 @@ class Inbox extends Component
 
         $this->draft = '';
         $this->toast = 'Balasan terkirim ke '.$conv->contact->name;
+    }
+
+    public function recomputeScore(LeadScoringService $scoring): void
+    {
+        $conv = $this->selected();
+        if (! $conv) {
+            return;
+        }
+
+        $result = $scoring->score($conv);
+        unset($this->selected, $this->conversations);
+        $this->toast = $result ? 'Skor lead diperbarui' : 'AI sedang sibuk, coba lagi';
     }
 
     public function generateAiDraft(): void
