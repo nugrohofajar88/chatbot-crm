@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Contact;
 use App\Models\Conversation;
+use App\Support\AiPersona;
 use Illuminate\Support\Facades\Log;
 
 use function Laravel\Ai\agent;
@@ -62,10 +63,7 @@ class WaInboundService
             ->map(fn ($m) => ($m->sender === 'lead' ? 'Calon pembeli' : 'Agen').': '.$m->body)
             ->implode("\n");
 
-        $instructions = 'Anda asisten AI untuk agen properti premium Aterra Realty di Indonesia. '
-            .'Balas dalam Bahasa Indonesia yang sopan, hangat, dan profesional. Singkat (maks 2-3 kalimat). '
-            .'Tujuan: menjawab pertanyaan calon pembeli, mengkualifikasi kebutuhan, dan mengarahkan ke viewing/penjadwalan. '
-            .'Jangan mengarang fakta properti yang tidak ada di konteks; jika tidak tahu, tawarkan untuk mengeceknya.';
+        $instructions = AiPersona::instructions();
 
         $prompt = "Riwayat percakapan:\n{$history}\n\n"
             .'Tulis SATU balasan terbaik sebagai agen untuk pesan terakhir calon pembeli. Hanya teks balasannya, tanpa label.';

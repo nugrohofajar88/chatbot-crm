@@ -6,6 +6,7 @@
         ['route' => 'pipeline',  'label' => 'Pipeline', 'icon' => 'bars'],
         ['route' => 'listings',  'label' => 'Listing Properti', 'icon' => 'home'],
         ['route' => 'contacts',  'label' => 'Profil Kontak', 'icon' => 'user'],
+        ['route' => 'settings',  'label' => 'Persona AI', 'icon' => 'cog'],
     ];
     $unreadTotal = (int) Conversation::sum('unread');
     $aiToday = Conversation::where('ai_enabled', true)->count();
