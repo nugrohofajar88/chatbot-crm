@@ -23,4 +23,12 @@ class Message extends Model
     {
         return $this->belongsTo(Conversation::class);
     }
+
+    /** URL lampiran untuk DITAMPILKAN (relatif, jalan di host/port apa pun). */
+    public function mediaUrl(): ?string
+    {
+        $path = data_get($this->payload, 'path');
+
+        return $path ? '/storage/'.ltrim($path, '/') : null;
+    }
 }

@@ -101,7 +101,20 @@
                                 {{ $isLead ? 'rounded-[4px_16px_16px_16px] border border-[#ECE3D4] bg-white text-[#3A332B]' : '' }}
                                 {{ $isAi ? 'rounded-[16px_16px_4px_16px] border border-accent/25 bg-accent/10 text-[#5A3A28]' : '' }}
                                 {{ ! $isLead && ! $isAi ? 'rounded-[16px_16px_4px_16px] bg-accent text-white' : '' }}">
-                                {{ $m->body }}
+                                @if ($m->type === 'image' && $m->mediaUrl())
+                                    <a href="{{ $m->mediaUrl() }}" target="_blank">
+                                        <img src="{{ $m->mediaUrl() }}" class="max-h-[220px] max-w-full rounded-[10px]" alt="lampiran">
+                                    </a>
+                                    @if (filled($m->body))<div class="mt-1.5">{{ $m->body }}</div>@endif
+                                @elseif ($m->type === 'document' && $m->mediaUrl())
+                                    <a href="{{ $m->mediaUrl() }}" target="_blank" class="flex items-center gap-2 underline">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                        {{ data_get($m->payload, 'name', 'Dokumen') }}
+                                    </a>
+                                    @if (filled($m->body))<div class="mt-1.5">{{ $m->body }}</div>@endif
+                                @else
+                                    {{ $m->body }}
+                                @endif
                             </div>
                             <div class="mt-1 text-[10.5px] text-[#B0A493] {{ $isLead ? 'text-left' : 'text-right' }}">{{ $m->created_at->format('H:i') }}</div>
                         </div>
@@ -110,6 +123,27 @@
 
                 {{-- input balasan --}}
                 <div class="flex-none border-t border-line px-4 pb-[18px] pt-3 md:px-[22px]">
+                    {{-- preview lampiran --}}
+                    @if ($attachment)
+                        @php $ext = strtolower($attachment->getClientOriginalExtension()); @endphp
+                        <div class="mb-2 flex items-center gap-3 rounded-[12px] border border-line-2 bg-panel-2 p-2.5">
+                            @if (in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
+                                <img src="{{ $attachment->temporaryUrl() }}" class="h-12 w-12 flex-none rounded-[8px] object-cover" alt="preview">
+                            @else
+                                <div class="flex h-12 w-12 flex-none items-center justify-center rounded-[8px] border border-line-2 bg-white text-ink-muted">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                                </div>
+                            @endif
+                            <div class="min-w-0 flex-1 truncate text-[12.5px] text-ink">{{ $attachment->getClientOriginalName() }}</div>
+                            <button wire:click="$set('attachment', null)" class="flex-none rounded-[8px] px-2 py-1 text-[12px] text-ink-muted hover:text-accent">Batal</button>
+                            <button wire:click="sendAttachment" wire:loading.attr="disabled" wire:target="sendAttachment"
+                                class="flex-none rounded-[9px] bg-accent px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50">
+                                <span wire:loading.remove wire:target="sendAttachment">Kirim</span>
+                                <span wire:loading wire:target="sendAttachment">Mengirim&hellip;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     <div class="mb-2.5 flex gap-2">
                         <button wire:click="generateAiDraft" wire:loading.attr="disabled" wire:target="generateAiDraft"
                             class="flex items-center gap-1.5 rounded-[9px] border border-accent/30 bg-accent/[0.08] px-3 py-1.5 text-[12px] font-semibold text-accent hover:bg-accent/15 disabled:opacity-50">
@@ -118,10 +152,16 @@
                             <span wire:loading wire:target="generateAiDraft">Membuat&hellip;</span>
                         </button>
                     </div>
-                    <div class="flex items-end gap-2.5 rounded-[15px] border border-line-2 bg-white py-2 pl-4 pr-2">
+                    <div class="flex items-end gap-2 rounded-[15px] border border-line-2 bg-white py-2 pl-2 pr-2">
+                        {{-- tombol lampiran --}}
+                        <label wire:loading.class="opacity-50" wire:target="attachment"
+                            class="flex h-10 w-10 flex-none cursor-pointer items-center justify-center rounded-[10px] text-ink-muted hover:bg-line/50">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                            <input type="file" wire:model="attachment" class="hidden" accept=".jpg,.jpeg,.png,.webp,.pdf">
+                        </label>
                         <textarea wire:model="draft" rows="1" placeholder="Tulis balasan, atau gunakan saran AI&hellip;"
                             wire:keydown.enter.prevent="sendReply"
-                            class="max-h-[90px] flex-1 resize-none border-none bg-transparent py-1.5 text-[13.5px] leading-relaxed text-[#3A332B] outline-none"></textarea>
+                            class="max-h-[90px] flex-1 resize-none border-none bg-transparent py-2.5 text-[13.5px] leading-relaxed text-[#3A332B] outline-none"></textarea>
                         <button wire:click="sendReply"
                             class="flex h-10 w-10 flex-none items-center justify-center rounded-[11px] bg-accent text-white hover:brightness-110">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>

@@ -4,20 +4,27 @@ namespace App\Livewire;
 
 use App\Models\Conversation;
 use App\Support\AiPersona;
+use App\Support\FonnteService;
 use App\Support\LeadScoringService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 use function Laravel\Ai\agent;
 
 #[Layout('components.layouts.app')]
 class Inbox extends Component
 {
+    use WithFileUploads;
+
     public ?int $selectedId = null;
 
     public string $draft = '';
+
+    public $attachment = null;
 
     public string $busy = '';   // '', 'draft'
 
@@ -78,11 +85,17 @@ class Inbox extends Component
         $this->toast = $conv->ai_enabled ? 'AI Otomatis diaktifkan' : 'AI dimatikan, Anda mengambil alih';
     }
 
-    public function sendReply(): void
+    public function sendReply(FonnteService $fonnte): void
     {
         $conv = $this->selected();
         $body = trim($this->draft);
         if (! $conv || $body === '') {
+            return;
+        }
+
+        if (! $fonnte->sendMessage($conv->contact->phone, $body)) {
+            $this->toast = 'Gagal mengirim, coba lagi';
+
             return;
         }
 
@@ -96,6 +109,46 @@ class Inbox extends Component
 
         $this->draft = '';
         $this->toast = 'Balasan terkirim ke '.$conv->contact->name;
+    }
+
+    public function sendAttachment(FonnteService $fonnte): void
+    {
+        $conv = $this->selected();
+        if (! $conv || ! $this->attachment) {
+            return;
+        }
+
+        $this->validate([
+            'attachment' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
+        ]);
+
+        $path = $this->attachment->store('wa', 'public');       // storage/app/public/wa/...
+        $url = url(Storage::disk('public')->url($path));        // URL absolut publik untuk Fonnte
+        $filename = $this->attachment->getClientOriginalName();
+        $caption = trim($this->draft);
+
+        if (! $fonnte->sendMedia($conv->contact->phone, $url, $filename, $caption)) {
+            Storage::disk('public')->delete($path);
+            $this->toast = 'Gagal mengirim lampiran (pastikan URL publik & nomor valid)';
+
+            return;
+        }
+
+        $ext = strtolower((string) $this->attachment->getClientOriginalExtension());
+        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true);
+
+        $conv->messages()->create([
+            'direction' => 'out',
+            'sender' => 'operator',
+            'body' => $caption,
+            'type' => $isImage ? 'image' : 'document',
+            'payload' => ['path' => $path, 'name' => $filename],
+        ]);
+        $conv->update(['last_message_at' => now(), 'unread' => 0]);
+
+        $this->reset('attachment');
+        $this->draft = '';
+        $this->toast = 'Lampiran terkirim ke '.$conv->contact->name;
     }
 
     public function recomputeScore(LeadScoringService $scoring): void
