@@ -19,12 +19,18 @@
     <title>{{ $title ?? 'Aterra Realty CRM' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    <style>[x-cloak]{display:none !important}</style>
 </head>
 <body class="h-full bg-bg font-sans text-ink antialiased">
-<div class="flex h-screen w-full overflow-hidden">
+<div x-data="{ sidebar: false }" class="flex h-screen w-full overflow-hidden">
+
+    {{-- backdrop drawer (mobile) --}}
+    <div x-show="sidebar" x-transition.opacity @click="sidebar = false" x-cloak
+         class="fixed inset-0 z-30 bg-black/40 md:hidden"></div>
 
     {{-- ===== SIDEBAR ===== --}}
-    <aside class="flex w-[248px] flex-none flex-col bg-sidebar px-4 py-[22px] text-sidebar-ink">
+    <aside x-bind:class="sidebar ? 'translate-x-0' : '-translate-x-full'"
+           class="fixed inset-y-0 left-0 z-40 flex w-[248px] flex-none flex-col bg-sidebar px-4 py-[22px] text-sidebar-ink transition-transform duration-200 md:static md:translate-x-0">
         <div class="flex items-center gap-3 px-2 pb-[22px] pt-1.5">
             <div class="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-serif text-[22px] font-bold leading-none text-white">A</div>
             <div>
@@ -37,7 +43,7 @@
         <nav class="flex flex-col gap-[3px]">
             @foreach ($navItems as $item)
                 @php $active = request()->routeIs($item['route']); @endphp
-                <a href="{{ route($item['route']) }}"
+                <a href="{{ route($item['route']) }}" @click="sidebar = false"
                    class="flex items-center gap-3 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-colors {{ $active ? 'bg-accent/15 text-[#F4EFE7]' : 'text-[#B7AD9E] hover:bg-white/5' }}">
                     <x-nav-icon :name="$item['icon']" />
                     <span class="flex-1">{{ $item['label'] }}</span>

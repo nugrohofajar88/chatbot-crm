@@ -14,20 +14,21 @@
     $sel = $this->selected;
 @endphp
 
-<div class="flex h-full flex-col">
+<div x-data="{ pane: 'list' }" class="flex h-full flex-col">
     <x-page-header title="Kotak Masuk" subtitle="{{ $this->conversations->count() }} percakapan WhatsApp" />
 
     <div class="flex min-h-0 flex-1">
 
         {{-- ===== KOLOM 1: DAFTAR PERCAKAPAN ===== --}}
-        <div class="flex w-[330px] flex-none flex-col border-r border-line bg-panel-2">
+        <div class="w-full flex-none flex-col border-r border-line bg-panel-2 md:w-[330px]"
+             :class="pane === 'list' ? 'flex' : 'hidden md:flex'">
             <div class="flex flex-none items-center px-4 py-3.5">
                 <span class="text-[11px] font-semibold uppercase tracking-[1.5px] text-ink-muted">{{ $this->conversations->count() }} Percakapan</span>
             </div>
             <div class="flex-1 overflow-y-auto px-2.5 pb-3.5">
                 @foreach ($this->conversations as $c)
                     @php $active = $c->id === $selectedId; $temp = $c->temperature; @endphp
-                    <button wire:click="selectConversation({{ $c->id }})" wire:key="conv-{{ $c->id }}"
+                    <button wire:click="selectConversation({{ $c->id }})" x-on:click="pane = 'thread'" wire:key="conv-{{ $c->id }}"
                         class="mb-[7px] block w-full rounded-[13px] p-[13px] text-left {{ $active ? 'bg-white shadow-[0_4px_14px_rgba(80,55,30,0.08)]' : 'hover:bg-white/40' }}">
                         <div class="flex items-center gap-2.5">
                             <div class="relative flex-none">
@@ -55,34 +56,41 @@
         </div>
 
         {{-- ===== KOLOM 2: THREAD ===== --}}
-        <div class="flex min-w-0 flex-1 flex-col bg-header">
+        <div class="min-w-0 flex-1 flex-col bg-header" :class="pane === 'thread' ? 'flex' : 'hidden md:flex'">
             @if ($sel)
                 {{-- header thread --}}
-                <div class="flex h-[66px] flex-none items-center gap-3 border-b border-line px-[22px]">
-                    <div class="flex h-[42px] w-[42px] items-center justify-center rounded-[12px] text-[15px] font-semibold"
+                <div class="flex h-[60px] flex-none items-center gap-2.5 border-b border-line px-4 md:h-[66px] md:gap-3 md:px-[22px]">
+                    <button type="button" @click="pane = 'list'" class="-ml-1 flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-ink-muted hover:bg-line/60 md:hidden">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
+                    <div class="flex h-[40px] w-[40px] flex-none items-center justify-center rounded-[12px] text-[15px] font-semibold md:h-[42px] md:w-[42px]"
                          style="background: {{ $avBg[$sel->temperature] }}; color: {{ $avFg[$sel->temperature] }}">{{ $sel->contact->initials() }}</div>
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center gap-2">
-                            <span class="text-[16px] font-semibold text-[#2A241E]">{{ $sel->contact->name }}</span>
-                            <span class="rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide"
+                            <span class="truncate text-[15px] font-semibold text-[#2A241E] md:text-[16px]">{{ $sel->contact->name }}</span>
+                            <span class="flex-none rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide"
                                   style="background: {{ $badgeBg[$sel->temperature] }}; color: {{ $badgeFg[$sel->temperature] }}">{{ $tempLabel[$sel->temperature] }}</span>
                         </div>
-                        <div class="mt-px text-[12px] text-[#9C8F7E]">{{ $sel->contact->phone }} &middot; WhatsApp</div>
+                        <div class="mt-px truncate text-[12px] text-[#9C8F7E]">{{ $sel->contact->phone }} &middot; WhatsApp</div>
                     </div>
                     <button wire:click="toggleAi"
-                        class="flex items-center gap-1.5 rounded-[10px] border border-line-2 px-3 py-2 text-[12px] font-semibold"
+                        class="flex flex-none items-center gap-1.5 rounded-[10px] border border-line-2 px-2.5 py-2 text-[12px] font-semibold md:px-3"
                         style="{{ $sel->ai_enabled ? 'background:rgba(176,85,47,0.12);color:#B0552F' : 'background:#EFE9DF;color:#9C8F7E' }}">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
-                        {{ $sel->ai_enabled ? 'AI Otomatis: Aktif' : 'AI Otomatis: Mati' }}
+                        <span class="hidden sm:inline">AI Otomatis:&nbsp;</span>{{ $sel->ai_enabled ? 'Aktif' : 'Mati' }}
+                    </button>
+                    <button type="button" @click="pane = 'copilot'" title="Asisten AI"
+                        class="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] border border-line-2 text-accent md:hidden">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
                     </button>
                 </div>
 
                 {{-- daftar pesan (auto-refresh) --}}
-                <div wire:poll.5s class="flex-1 space-y-3 overflow-y-auto px-[26px] py-[22px]">
+                <div wire:poll.5s class="flex-1 space-y-3 overflow-y-auto px-4 py-4 md:px-[26px] md:py-[22px]">
                     <div class="mx-auto w-fit rounded-full bg-[#EDE6DA] px-3 py-1 text-[11px] text-[#A89C8C]">Percakapan</div>
                     @foreach ($sel->messages as $m)
                         @php $isLead = $m->sender === 'lead'; $isAi = $m->sender === 'ai'; @endphp
-                        <div class="max-w-[74%] {{ $isLead ? 'mr-auto' : 'ml-auto' }}" wire:key="msg-{{ $m->id }}">
+                        <div class="max-w-[85%] {{ $isLead ? 'mr-auto' : 'ml-auto' }} md:max-w-[74%]" wire:key="msg-{{ $m->id }}">
                             @if ($isAi)
                                 <div class="mb-1 flex items-center gap-1.5">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="#B0552F"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
@@ -101,7 +109,7 @@
                 </div>
 
                 {{-- input balasan --}}
-                <div class="flex-none border-t border-line px-[22px] pb-[18px] pt-3">
+                <div class="flex-none border-t border-line px-4 pb-[18px] pt-3 md:px-[22px]">
                     <div class="mb-2.5 flex gap-2">
                         <button wire:click="generateAiDraft" wire:loading.attr="disabled" wire:target="generateAiDraft"
                             class="flex items-center gap-1.5 rounded-[9px] border border-accent/30 bg-accent/[0.08] px-3 py-1.5 text-[12px] font-semibold text-accent hover:bg-accent/15 disabled:opacity-50">
@@ -127,8 +135,12 @@
 
         {{-- ===== KOLOM 3: COPILOT AI ===== --}}
         @if ($sel)
-            <div class="flex w-[312px] flex-none flex-col overflow-y-auto border-l border-line bg-panel">
+            <div class="w-full flex-none flex-col overflow-y-auto border-l border-line bg-panel md:w-[312px]"
+                 :class="pane === 'copilot' ? 'flex' : 'hidden md:flex'">
                 <div class="flex items-center gap-2 px-[18px] pb-3.5 pt-[18px]">
+                    <button type="button" @click="pane = 'thread'" class="-ml-1 flex h-8 w-8 flex-none items-center justify-center rounded-[9px] text-ink-muted hover:bg-line/60 md:hidden">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><polyline points="15 18 9 12 15 6"/></svg>
+                    </button>
                     <div class="flex h-[26px] w-[26px] items-center justify-center rounded-[8px] bg-accent">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
                     </div>
