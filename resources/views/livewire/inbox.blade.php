@@ -86,7 +86,17 @@
                 </div>
 
                 {{-- daftar pesan (auto-refresh) --}}
-                <div wire:poll.5s class="flex-1 space-y-3 overflow-y-auto px-4 py-4 md:px-[26px] md:py-[22px]">
+                <div wire:poll.5s="pollThread"
+                    x-data="{ init() {
+                        const el = this.$el;
+                        let stick = true;
+                        const nearBottom = () => el.scrollHeight - el.scrollTop - el.clientHeight < 120;
+                        const toBottom = () => { el.scrollTop = el.scrollHeight; };
+                        el.addEventListener('scroll', () => { stick = nearBottom(); });
+                        this.$nextTick(toBottom);
+                        new MutationObserver(() => { if (stick) toBottom(); }).observe(el, { childList: true, subtree: true });
+                    } }"
+                    class="flex-1 space-y-3 overflow-y-auto px-4 py-4 md:px-[26px] md:py-[22px]">
                     <div class="mx-auto w-fit rounded-full bg-[#EDE6DA] px-3 py-1 text-[11px] text-[#A89C8C]">Percakapan</div>
                     @foreach ($sel->messages as $m)
                         @php $isLead = $m->sender === 'lead'; $isAi = $m->sender === 'ai'; @endphp

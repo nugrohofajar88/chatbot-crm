@@ -35,6 +35,22 @@ class Inbox extends Component
         $this->selectedId = Conversation::query()
             ->orderByDesc('last_message_at')
             ->value('id');
+
+        $this->markRead();
+    }
+
+    /** Tandai percakapan yang sedang dibuka sebagai sudah dibaca. */
+    private function markRead(): void
+    {
+        if ($this->selectedId) {
+            Conversation::whereKey($this->selectedId)->where('unread', '>', 0)->update(['unread' => 0]);
+        }
+    }
+
+    /** Dipanggil tiap polling: jaga percakapan terbuka tetap 0 unread. */
+    public function pollThread(): void
+    {
+        $this->markRead();
     }
 
     #[Computed]
@@ -72,7 +88,7 @@ class Inbox extends Component
     {
         $this->selectedId = $id;
         $this->draft = '';
-        Conversation::whereKey($id)->update(['unread' => 0]);
+        $this->markRead();
     }
 
     public function toggleAi(): void
