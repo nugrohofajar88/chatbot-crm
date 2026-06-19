@@ -125,6 +125,14 @@
                                 @else
                                     {{ $m->body }}
                                 @endif
+                                @if (in_array($m->type, ['image', 'document'], true))
+                                    @php $dlv = data_get($m->payload, 'delivery'); @endphp
+                                    @if ($dlv === 'link')
+                                        <div class="mt-1 text-[10px] opacity-70">&#8599; Dikirim sebagai link</div>
+                                    @elseif ($dlv === 'failed')
+                                        <div class="mt-1 text-[10px] opacity-70">&#9888; Tidak terkirim ke WA</div>
+                                    @endif
+                                @endif
                             </div>
                             <div class="mt-1 text-[10.5px] text-[#B0A493] {{ $isLead ? 'text-left' : 'text-right' }}">{{ $m->created_at->format('H:i') }}</div>
                         </div>

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Support\Contracts\WhatsappGateway;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  *
  * Diadaptasi dari proyek larashop-be.
  */
-class FonnteService
+class FonnteService implements WhatsappGateway
 {
     public function sendMessage(string $phone, string $message): bool
     {

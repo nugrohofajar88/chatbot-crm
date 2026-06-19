@@ -5,7 +5,7 @@ namespace App\Support;
 use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Setting;
-use App\Support\AiPersona;
+use App\Support\Contracts\WhatsappGateway;
 use Illuminate\Support\Facades\Log;
 
 use function Laravel\Ai\agent;
@@ -14,19 +14,19 @@ use function Laravel\Ai\agent;
  * Memproses pesan WhatsApp masuk untuk CRM:
  *   1. Cari/buat Contact + Conversation.
  *   2. Simpan pesan (sender: lead).
- *   3. Jika ai_enabled: AI membalas otomatis lalu kirim via Fonnte.
+ *   3. Jika ai_enabled: AI membalas otomatis lalu kirim via gateway aktif.
  */
 class WaInboundService
 {
     public function __construct(
-        private readonly FonnteService $fonnte,
+        private readonly WhatsappGateway $wa,
         private readonly LeadScoringService $scoring,
     ) {
     }
 
     public function handleIncoming(string $phone, string $text, ?string $name = null): void
     {
-        $phone = $this->fonnte->normalize($phone);
+        $phone = $this->wa->normalize($phone);
 
         $contact = Contact::firstOrCreate(
             ['phone' => $phone],
@@ -74,13 +74,13 @@ class WaInboundService
         $conv->load(['messages' => fn ($q) => $q->orderBy('id'), 'contact']);
 
         $history = $conv->messages
-            ->map(fn ($m) => ($m->sender === 'lead' ? 'Calon pembeli' : 'Agen').': '.$m->body)
+            ->map(fn ($m) => ($m->sender === 'lead' ? 'Pengguna' : 'Asisten').': '.$m->body)
             ->implode("\n");
 
         $instructions = AiPersona::instructions();
 
         $prompt = "Riwayat percakapan:\n{$history}\n\n"
-            .'Tulis SATU balasan terbaik sebagai agen untuk pesan terakhir calon pembeli. Hanya teks balasannya, tanpa label.';
+            .'Tulis SATU balasan terbaik untuk pesan terakhir pengguna, sesuai peranmu. Hanya teks balasannya, tanpa label.';
 
         try {
             $res = agent(instructions: $instructions)->prompt($prompt);
@@ -95,7 +95,7 @@ class WaInboundService
             return;
         }
 
-        $sent = $this->fonnte->sendMessage($conv->contact->phone, $reply);
+        $sent = $this->wa->sendMessage($conv->contact->phone, $reply);
 
         if ($sent) {
             $conv->messages()->create([

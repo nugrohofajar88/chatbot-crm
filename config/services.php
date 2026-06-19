@@ -35,10 +35,22 @@ return [
         ],
     ],
 
+    // Gateway WhatsApp aktif: 'fonnte' atau 'wablas'.
+    'whatsapp' => [
+        'driver' => env('WHATSAPP_DRIVER', 'fonnte'),
+    ],
+
     'fonnte' => [
         'base_url' => env('FONNTE_BASE_URL', 'https://api.fonnte.com'),
         'token' => env('FONNTE_TOKEN'),
         'webhook_secret' => env('FONNTE_WEBHOOK_SECRET'),
+    ],
+
+    'wablas' => [
+        'base_url' => env('WABLAS_BASE_URL', 'https://wablas.com'),
+        'token' => env('WABLAS_TOKEN'),
+        'secret_key' => env('WABLAS_SECRET_KEY'),
+        'webhook_secret' => env('WABLAS_WEBHOOK_SECRET'),
     ],
 
 ];

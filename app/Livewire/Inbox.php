@@ -4,10 +4,9 @@ namespace App\Livewire;
 
 use App\Models\Conversation;
 use App\Support\AiPersona;
-use App\Support\FonnteService;
+use App\Support\Contracts\WhatsappGateway;
 use App\Support\LeadScoringService;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -101,7 +100,7 @@ class Inbox extends Component
         $this->toast = $conv->ai_enabled ? 'AI Otomatis diaktifkan' : 'AI dimatikan, Anda mengambil alih';
     }
 
-    public function sendReply(FonnteService $fonnte): void
+    public function sendReply(WhatsappGateway $wa): void
     {
         $conv = $this->selected();
         $body = trim($this->draft);
@@ -109,7 +108,7 @@ class Inbox extends Component
             return;
         }
 
-        if (! $fonnte->sendMessage($conv->contact->phone, $body)) {
+        if (! $wa->sendMessage($conv->contact->phone, $body)) {
             $this->toast = 'Gagal mengirim, coba lagi';
 
             return;
@@ -127,7 +126,7 @@ class Inbox extends Component
         $this->toast = 'Balasan terkirim ke '.$conv->contact->name;
     }
 
-    public function sendAttachment(FonnteService $fonnte): void
+    public function sendAttachment(WhatsappGateway $wa): void
     {
         $conv = $this->selected();
         if (! $conv || ! $this->attachment) {
@@ -139,33 +138,43 @@ class Inbox extends Component
         ]);
 
         $path = $this->attachment->store('wa', 'public_uploads');  // public/uploads/wa/...
-        $url = url('uploads/'.$path);                             // URL absolut publik untuk Fonnte
+        $publicUrl = url('uploads/'.$path);                       // URL absolut publik
         $filename = $this->attachment->getClientOriginalName();
         $caption = trim($this->draft);
 
-        if (! $fonnte->sendMedia($conv->contact->phone, $url, $filename, $caption)) {
-            // Sengaja TIDAK menghapus file: biar URL bisa dicek manual & Fonnte
-            // sempat mengunduhnya jika fetch-nya asinkron. Cek log 'fonnte.media'.
-            $this->toast = 'Gagal mengirim lampiran. Cek log fonnte.media untuk alasannya.';
-
-            return;
+        // 1. Coba kirim sebagai MEDIA (berfungsi di Fonnte berbayar).
+        $delivery = 'failed';
+        if ($wa->sendMedia($conv->contact->phone, $publicUrl, $filename, $caption)) {
+            $delivery = 'media';
+        } else {
+            // 2. Fallback: kirim LINK sebagai teks (andal di plan gratis / semua gateway).
+            //    Pola sama seperti larashop-be (link dimasukkan ke pesan teks).
+            $linkText = ($caption !== '' ? $caption."\n\n" : '').'📎 Lihat lampiran: '.$publicUrl;
+            if ($wa->sendMessage($conv->contact->phone, $linkText)) {
+                $delivery = 'link';
+            }
         }
 
         $ext = strtolower((string) $this->attachment->getClientOriginalExtension());
         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true);
 
+        // Selalu simpan pesan ke thread (tampil di CRM) apa pun hasil pengirimannya.
         $conv->messages()->create([
             'direction' => 'out',
             'sender' => 'operator',
             'body' => $caption,
             'type' => $isImage ? 'image' : 'document',
-            'payload' => ['path' => $path, 'name' => $filename],
+            'payload' => ['path' => $path, 'name' => $filename, 'delivery' => $delivery],
         ]);
         $conv->update(['last_message_at' => now(), 'unread' => 0]);
 
         $this->reset('attachment');
         $this->draft = '';
-        $this->toast = 'Lampiran terkirim ke '.$conv->contact->name;
+        $this->toast = match ($delivery) {
+            'media' => 'Lampiran terkirim ke '.$conv->contact->name,
+            'link' => 'Terkirim sebagai link (Fonnte gratis tak dukung media)',
+            default => 'Lampiran tersimpan, tapi gagal terkirim ke WA',
+        };
     }
 
     public function recomputeScore(LeadScoringService $scoring): void
@@ -190,13 +199,13 @@ class Inbox extends Component
         $this->busy = 'draft';
 
         $history = $conv->messages
-            ->map(fn ($m) => ($m->sender === 'lead' ? 'Calon pembeli' : 'Agen').': '.$m->body)
+            ->map(fn ($m) => ($m->sender === 'lead' ? 'Pengguna' : 'Asisten').': '.$m->body)
             ->implode("\n");
 
         $instructions = AiPersona::instructions();
 
         $prompt = "Riwayat percakapan:\n{$history}\n\n"
-            .'Tulis SATU balasan terbaik sebagai agen untuk pesan terakhir calon pembeli. Hanya teks balasannya, tanpa label.';
+            .'Tulis SATU balasan terbaik untuk pesan terakhir pengguna, sesuai peranmu. Hanya teks balasannya, tanpa label.';
 
         try {
             $res = agent(instructions: $instructions)->prompt($prompt);
