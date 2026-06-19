@@ -29,6 +29,6 @@ class Message extends Model
     {
         $path = data_get($this->payload, 'path');
 
-        return $path ? '/storage/'.ltrim($path, '/') : null;
+        return $path ? '/uploads/'.ltrim($path, '/') : null;
     }
 }

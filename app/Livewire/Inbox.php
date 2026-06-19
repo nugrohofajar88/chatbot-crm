@@ -122,13 +122,13 @@ class Inbox extends Component
             'attachment' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:10240',
         ]);
 
-        $path = $this->attachment->store('wa', 'public');       // storage/app/public/wa/...
-        $url = url(Storage::disk('public')->url($path));        // URL absolut publik untuk Fonnte
+        $path = $this->attachment->store('wa', 'public_uploads');  // public/uploads/wa/...
+        $url = url('uploads/'.$path);                             // URL absolut publik untuk Fonnte
         $filename = $this->attachment->getClientOriginalName();
         $caption = trim($this->draft);
 
         if (! $fonnte->sendMedia($conv->contact->phone, $url, $filename, $caption)) {
-            Storage::disk('public')->delete($path);
+            Storage::disk('public_uploads')->delete($path);
             $this->toast = 'Gagal mengirim lampiran (pastikan URL publik & nomor valid)';
 
             return;
