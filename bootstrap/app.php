@@ -13,7 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Situs di belakang proxy/Cloudflare: percayai header X-Forwarded-* agar
+        // Laravel tahu request HTTPS -> URL signed (mis. upload Livewire) pakai https,
+        // tidak kena redirect http->https yang mengubah POST jadi GET (error 405).
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

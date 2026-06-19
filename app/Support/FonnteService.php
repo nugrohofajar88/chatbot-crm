@@ -85,7 +85,13 @@ class FonnteService
 
         $ok = $response->successful() && (bool) data_get($response->json(), 'status', false);
 
-        Log::info('fonnte.media', ['phone' => $phone, 'http' => $response->status(), 'ok' => $ok, 'url' => $url]);
+        Log::info('fonnte.media', [
+            'phone' => $phone,
+            'http' => $response->status(),
+            'ok' => $ok,
+            'url' => $url,
+            'response' => $response->json() ?? $response->body(),
+        ]);
 
         return $ok;
     }

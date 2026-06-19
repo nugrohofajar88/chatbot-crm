@@ -144,8 +144,9 @@ class Inbox extends Component
         $caption = trim($this->draft);
 
         if (! $fonnte->sendMedia($conv->contact->phone, $url, $filename, $caption)) {
-            Storage::disk('public_uploads')->delete($path);
-            $this->toast = 'Gagal mengirim lampiran (pastikan URL publik & nomor valid)';
+            // Sengaja TIDAK menghapus file: biar URL bisa dicek manual & Fonnte
+            // sempat mengunduhnya jika fetch-nya asinkron. Cek log 'fonnte.media'.
+            $this->toast = 'Gagal mengirim lampiran. Cek log fonnte.media untuk alasannya.';
 
             return;
         }
