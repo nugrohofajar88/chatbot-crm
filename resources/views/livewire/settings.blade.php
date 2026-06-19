@@ -19,7 +19,7 @@
                 </p>
 
                 <textarea wire:model="persona" rows="10"
-                    class="w-full resize-y rounded-[12px] border border-line-2 bg-white p-4 text-[13.5px] leading-relaxed text-ink outline-none focus:border-accent"></textarea>
+                    class="w-full resize-y rounded-[12px] border border-line-2 bg-white p-4 text-[13.5px] leading-relaxed text-ink outline-none focus:border-accent">{{ $persona }}</textarea>
 
                 <div class="mt-4 flex items-center gap-2.5">
                     <button wire:click="save"
@@ -49,7 +49,7 @@
                 </p>
                 <div class="flex items-center gap-3">
                     <label class="text-[13px] font-medium text-ink">Hitung tiap</label>
-                    <input type="number" min="0" max="50" wire:model="scoringInterval"
+                    <input type="number" min="0" max="50" wire:model="scoringInterval" value="{{ $scoringInterval }}"
                         class="w-20 rounded-[10px] border border-line-2 bg-white px-3 py-2 text-center text-[14px] text-ink outline-none focus:border-accent">
                     <span class="text-[13px] text-ink-muted">pesan lead</span>
                     <button wire:click="saveScoring"
