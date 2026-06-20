@@ -3,18 +3,40 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Setting extends Model
 {
-    protected $fillable = ['key', 'value'];
+    protected $fillable = ['code', 'value', 'group', 'description'];
 
-    public static function get(string $key, ?string $default = null): ?string
+    public const CACHE_KEY = 'app.settings';
+
+    /** Buang cache settings tiap ada perubahan (jadi tak perlu config:clear). */
+    protected static function booted(): void
     {
-        return static::query()->where('key', $key)->value('value') ?? $default;
+        $bust = static fn () => Cache::forget(self::CACHE_KEY);
+        static::saved($bust);
+        static::deleted($bust);
     }
 
-    public static function put(string $key, ?string $value): void
+    /** Seluruh setting sebagai map code => value (di-cache). */
+    public static function map(): array
     {
-        static::updateOrCreate(['key' => $key], ['value' => $value]);
+        return Cache::rememberForever(
+            self::CACHE_KEY,
+            static fn () => static::query()->pluck('value', 'code')->all(),
+        );
+    }
+
+    public static function get(string $code, ?string $default = null): ?string
+    {
+        $value = static::map()[$code] ?? null;
+
+        return ($value === null || $value === '') ? $default : $value;
+    }
+
+    public static function put(string $code, ?string $value): void
+    {
+        static::updateOrCreate(['code' => $code], ['value' => $value]);
     }
 }
