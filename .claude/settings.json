@@ -9,7 +9,10 @@
       "PowerShell(php artisan route:list --path=webhooks/meta 2>&1)",
       "PowerShell(php make_icon.php)",
       "PowerShell(php artisan tinker --execute=\"dump\\(App\\\\Models\\\\Setting::where\\('code','META_INSTAGRAM_COMMENTS_ENABLED'\\)->first\\(\\)?->only\\(['code','value','group','description']\\)\\);\" 2>&1)",
-      "Bash(/c/xampp/mysql/bin/mysql.exe -u root -h 127.0.0.1 chatbot_crm -e \"SELECT code, value, \\\\`group\\\\`, description FROM settings WHERE code='META_INSTAGRAM_COMMENTS_ENABLED';\")"
+      "Bash(/c/xampp/mysql/bin/mysql.exe -u root -h 127.0.0.1 chatbot_crm -e \"SELECT code, value, \\\\`group\\\\`, description FROM settings WHERE code='META_INSTAGRAM_COMMENTS_ENABLED';\")",
+      "PowerShell(php -l app/Support/MetaInboundService.php)",
+      "PowerShell(php artisan db:seed --class=SettingsSeeder --force 2>&1)",
+      "PowerShell(php artisan tinker --execute=\"echo 'public_reply='.var_export\\(config\\('services.meta.messenger_comment_public_reply'\\),true\\).' | comments='.var_export\\(config\\('services.meta.messenger_comments_enabled'\\),true\\).' | total='.App\\\\Models\\\\Setting::count\\(\\);\" 2>&1)"
     ]
   }
 }

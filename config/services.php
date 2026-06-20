@@ -67,6 +67,7 @@ return [
         // yang dimatikan diabaikan (pesan tidak diproses). Nyalakan lagi tanpa ubah kode.
         'messenger_enabled' => env('META_MESSENGER_ENABLED', true),
         'messenger_comments_enabled' => env('META_MESSENGER_COMMENTS_ENABLED', true),
+        'messenger_comment_public_reply' => env('META_MESSENGER_COMMENT_PUBLIC_REPLY', false),
         'instagram_enabled' => env('META_INSTAGRAM_ENABLED', true),
         'instagram_comments_enabled' => env('META_INSTAGRAM_COMMENTS_ENABLED', true),
     ],

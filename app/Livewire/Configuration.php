@@ -54,7 +54,8 @@ class Configuration extends Component
         ['code' => 'META_IG_APP_SECRET', 'label' => 'Instagram App Secret', 'group' => 'meta', 'type' => 'secret'],
         ['code' => 'META_GRAPH_VERSION', 'label' => 'Graph API Version', 'group' => 'meta', 'type' => 'text'],
         ['code' => 'META_MESSENGER_ENABLED', 'label' => 'Messenger DM aktif', 'group' => 'meta', 'type' => 'bool'],
-        ['code' => 'META_MESSENGER_COMMENTS_ENABLED', 'label' => 'Auto-reply komentar FB/iklan + DM (publik)', 'group' => 'meta', 'type' => 'bool'],
+        ['code' => 'META_MESSENGER_COMMENTS_ENABLED', 'label' => 'Komentar FB/iklan → DM (lead)', 'group' => 'meta', 'type' => 'bool'],
+        ['code' => 'META_MESSENGER_COMMENT_PUBLIC_REPLY', 'label' => 'Balas komentar FB publik (butuh pages_manage_engagement)', 'group' => 'meta', 'type' => 'bool'],
         ['code' => 'META_INSTAGRAM_ENABLED', 'label' => 'Instagram DM aktif', 'group' => 'meta', 'type' => 'bool'],
         ['code' => 'META_INSTAGRAM_COMMENTS_ENABLED', 'label' => 'Auto-reply komentar IG (publik)', 'group' => 'meta', 'type' => 'bool'],
     ];

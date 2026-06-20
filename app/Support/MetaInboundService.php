@@ -161,13 +161,16 @@ class MetaInboundService
     {
         $channel = 'messenger';
 
-        // 1. Balas komentar publik (singkat, ajak ke DM).
-        $public = AiReply::comment($text, $name);
-        if ($public !== '') {
-            $this->meta->replyToComment($commentId, $public, $channel);
+        // 1. Balas komentar publik — OPSIONAL (default mati). Butuh izin
+        //    pages_manage_engagement. Inti lead-gen tidak memerlukannya.
+        if (config('services.meta.messenger_comment_public_reply', false)) {
+            $public = AiReply::comment($text, $name);
+            if ($public !== '') {
+                $this->meta->replyToComment($commentId, $public, $channel);
+            }
         }
 
-        // 2. Private reply -> buka DM ke pengomentar.
+        // 2. Private reply -> buka DM ke pengomentar (butuh pages_messaging saja).
         $dm = AiReply::commentToDm($text, $name);
         if ($dm === '') {
             return;
