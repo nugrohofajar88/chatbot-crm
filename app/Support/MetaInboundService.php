@@ -5,39 +5,38 @@ namespace App\Support;
 use App\Models\Contact;
 use App\Models\Conversation;
 use App\Models\Setting;
-use App\Support\Contracts\WhatsappGateway;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Memproses pesan WhatsApp masuk untuk CRM:
- *   1. Cari/buat Contact + Conversation.
- *   2. Simpan pesan (sender: lead).
- *   3. Jika ai_enabled: AI membalas otomatis lalu kirim via gateway aktif.
+ * Memproses pesan masuk dari Meta (Messenger / Instagram) untuk CRM.
+ * Identitas pengguna = PSID/IGSID (bukan nomor HP). Alurnya sama seperti
+ * WaInboundService, tapi balasan dikirim via MetaService.
  */
-class WaInboundService
+class MetaInboundService
 {
     public function __construct(
-        private readonly WhatsappGateway $wa,
+        private readonly MetaService $meta,
         private readonly LeadScoringService $scoring,
     ) {
     }
 
-    public function handleIncoming(string $phone, string $text, ?string $name = null): void
+    /** @param  string  $channel  'messenger' | 'instagram' */
+    public function handleIncoming(string $channel, string $psid, string $text, ?string $name = null): void
     {
-        $phone = $this->wa->normalize($phone);
+        $placeholder = ucfirst($channel).' User';
 
         $contact = Contact::firstOrCreate(
-            ['phone' => $phone],
-            ['name' => $name ?: $phone, 'channel' => 'whatsapp', 'lead_since' => now()],
+            ['channel' => $channel, 'psid' => $psid],
+            ['name' => $name ?: $placeholder, 'lead_since' => now()],
         );
 
-        // Lengkapi nama bila sebelumnya hanya nomor.
-        if ($name && $contact->name === $phone) {
+        // Lengkapi nama bila sebelumnya masih placeholder.
+        if ($name && in_array($contact->name, ['', $placeholder], true)) {
             $contact->update(['name' => $name]);
         }
 
         $conv = $contact->conversations()->firstOrCreate(
-            ['channel' => 'whatsapp'],
+            ['channel' => $channel],
             ['stage' => 'baru', 'temperature' => 'cold', 'score' => 0, 'ai_enabled' => true],
         );
 
@@ -51,33 +50,30 @@ class WaInboundService
         $conv->update(['last_message_at' => now()]);
 
         if ($conv->ai_enabled) {
-            $this->autoReply($conv);
+            $this->autoReply($conv, $psid);
         }
 
-        // Auto-scoring di-throttle: saat lead pertama, lalu tiap kelipatan
-        // 'scoring_interval' (diatur operator). Nilai 0 = nonaktif (manual saja).
+        // Auto-scoring di-throttle, sama seperti WhatsApp.
         $interval = (int) Setting::get('scoring_interval', (string) config('aterra.scoring_interval', 3));
         $leadCount = $conv->messages()->where('sender', 'lead')->count();
         if ($interval >= 1 && ($leadCount === 1 || $leadCount % $interval === 0)) {
             try {
                 $this->scoring->score($conv);
             } catch (\Throwable $e) {
-                Log::warning('wa.autoscore.failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
+                Log::warning('meta.autoscore.failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
             }
         }
     }
 
-    protected function autoReply(Conversation $conv): void
+    protected function autoReply(Conversation $conv, string $psid): void
     {
-        $conv->loadMissing('contact');
-
         $reply = AiReply::generate($conv);
 
         if ($reply === '') {
             return;
         }
 
-        if ($this->wa->sendMessage($conv->contact->phone, $reply)) {
+        if ($this->meta->sendMessage($psid, $reply)) {
             $conv->messages()->create([
                 'direction' => 'out',
                 'sender' => 'ai',

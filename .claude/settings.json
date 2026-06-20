@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "PowerShell(php artisan migrate --force 2>&1)",
+      "PowerShell(php artisan route:list --path=webhooks 2>&1)"
+    ]
+  }
+}

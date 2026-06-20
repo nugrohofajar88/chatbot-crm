@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Contact extends Model
 {
     protected $fillable = [
-        'name', 'phone', 'email', 'channel', 'prefs', 'lead_since',
+        'name', 'phone', 'psid', 'email', 'channel', 'prefs', 'lead_since',
     ];
 
     protected function casts(): array

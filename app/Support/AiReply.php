@@ -1,0 +1,38 @@
+<?php
+
+namespace App\Support;
+
+use App\Models\Conversation;
+use Illuminate\Support\Facades\Log;
+
+use function Laravel\Ai\agent;
+
+/**
+ * Menghasilkan SATU balasan AI untuk sebuah percakapan, lintas channel
+ * (WhatsApp / Messenger / Instagram). Memakai persona dari AiPersona.
+ * Mengembalikan '' bila AI gagal atau balasannya kosong (dicatat ke log).
+ */
+class AiReply
+{
+    public static function generate(Conversation $conv): string
+    {
+        $conv->load(['messages' => fn ($q) => $q->orderBy('id')]);
+
+        $history = $conv->messages
+            ->map(fn ($m) => ($m->sender === 'lead' ? 'Pengguna' : 'Asisten').': '.$m->body)
+            ->implode("\n");
+
+        $prompt = "Riwayat percakapan:\n{$history}\n\n"
+            .'Tulis SATU balasan terbaik untuk pesan terakhir pengguna, sesuai peranmu. Hanya teks balasannya, tanpa label.';
+
+        try {
+            $res = agent(instructions: AiPersona::instructions())->prompt($prompt);
+
+            return trim(preg_replace('/^["\']|["\']$/', '', $res->text));
+        } catch (\Throwable $e) {
+            Log::warning('ai.reply.failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
+
+            return '';
+        }
+    }
+}
