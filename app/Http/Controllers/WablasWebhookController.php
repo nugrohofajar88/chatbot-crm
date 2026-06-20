@@ -33,15 +33,19 @@ class WablasWebhookController extends Controller
         $payload = $request->all();
         Log::info('wablas.webhook.received', ['payload' => $payload]);
 
-        // Wablas: `sender` = nomor pengirim asli; `phone` kadang nomor device.
-        $phone = trim((string) ($payload['sender'] ?? $payload['phone'] ?? ''));
+        // Wablas incoming: `phone` = nomor lawan bicara (lead); `sender` = nomor
+        // device kita sendiri. Jadi `phone` dipakai sebagai kontak; `sender` hanya
+        // untuk mendeteksi & menolak pesan yang nyasar ke diri sendiri (anti-loop).
+        $device = trim((string) ($payload['sender'] ?? ''));
+        $phone = trim((string) ($payload['phone'] ?? ''));
         $message = trim((string) ($payload['message'] ?? ''));
         $name = trim((string) ($payload['pushName'] ?? $payload['name'] ?? '')) ?: null;
         $isFromMe = filter_var($payload['isFromMe'] ?? false, FILTER_VALIDATE_BOOL);
         $isGroup = filter_var($payload['isGroup'] ?? false, FILTER_VALIDATE_BOOL);
 
-        // Abaikan pesan dari device sendiri / grup / tanpa pengirim / tanpa teks.
-        if ($phone === '' || $message === '' || $isFromMe || $isGroup) {
+        // Abaikan: tanpa pengirim/teks, dari device sendiri, grup, atau nomor lead
+        // sama dengan nomor device (cegah balasan AI nyasar balik ke diri sendiri).
+        if ($phone === '' || $message === '' || $isFromMe || $isGroup || ($device !== '' && $phone === $device)) {
             return response()->json(['status' => 'ignored']);
         }
 
