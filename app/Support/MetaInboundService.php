@@ -78,7 +78,7 @@ class MetaInboundService
             return;
         }
 
-        $mid = $this->meta->sendMessage($psid, $reply);
+        $mid = $this->meta->sendMessage($psid, $reply, $conv->channel);
 
         if ($mid !== null) {
             $conv->messages()->create([

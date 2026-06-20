@@ -58,7 +58,8 @@ return [
         'app_id' => env('META_APP_ID'),
         'app_secret' => env('META_APP_SECRET'),
         'verify_token' => env('META_VERIFY_TOKEN'),
-        'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),
+        'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),    // Messenger (graph.facebook.com)
+        'ig_access_token' => env('META_IG_ACCESS_TOKEN'),        // Instagram Login (graph.instagram.com)
         'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
     ],
 

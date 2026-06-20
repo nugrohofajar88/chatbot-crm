@@ -14,30 +14,53 @@ use Illuminate\Support\Facades\Log;
  */
 class MetaService
 {
-    /** Kirim pesan teks. Mengembalikan message_id Meta bila sukses, null bila gagal. */
-    public function sendMessage(string $recipientId, string $text): ?string
+    /**
+     * Resolusi base URL + token sesuai channel.
+     *   - messenger: graph.facebook.com + Page Access Token.
+     *   - instagram: graph.instagram.com + Instagram access token (Instagram Login).
+     *
+     * @return array{base: string, token: string}
+     */
+    private function endpoint(string $channel): array
     {
-        $token = (string) config('services.meta.page_access_token');
+        $version = (string) config('services.meta.graph_version', 'v21.0');
+
+        if ($channel === 'instagram') {
+            return [
+                'base' => "https://graph.instagram.com/{$version}",
+                'token' => (string) config('services.meta.ig_access_token'),
+            ];
+        }
+
+        return [
+            'base' => "https://graph.facebook.com/{$version}",
+            'token' => (string) config('services.meta.page_access_token'),
+        ];
+    }
+
+    /** Kirim pesan teks. Mengembalikan message_id Meta bila sukses, null bila gagal. */
+    public function sendMessage(string $recipientId, string $text, string $channel = 'messenger'): ?string
+    {
+        ['base' => $base, 'token' => $token] = $this->endpoint($channel);
 
         if ($token === '') {
-            Log::error('meta.send.no_token');
+            Log::error('meta.send.no_token', ['channel' => $channel]);
 
             return null;
         }
 
-        $version = (string) config('services.meta.graph_version', 'v21.0');
-        $url = "https://graph.facebook.com/{$version}/me/messages";
+        // IG (Instagram Login) tidak memakai messaging_type.
+        $body = ['recipient' => ['id' => $recipientId], 'message' => ['text' => $text]];
+        if ($channel !== 'instagram') {
+            $body['messaging_type'] = 'RESPONSE';
+        }
 
         try {
             $response = Http::withToken($token)
                 ->timeout(20)
-                ->post($url, [
-                    'recipient' => ['id' => $recipientId],
-                    'messaging_type' => 'RESPONSE',
-                    'message' => ['text' => $text],
-                ]);
+                ->post("{$base}/me/messages", $body);
         } catch (\Throwable $e) {
-            Log::error('meta.send.exception', ['recipient' => $recipientId, 'message' => $e->getMessage()]);
+            Log::error('meta.send.exception', ['recipient' => $recipientId, 'channel' => $channel, 'message' => $e->getMessage()]);
 
             return null;
         }
@@ -47,6 +70,7 @@ class MetaService
 
         Log::info('meta.send', [
             'recipient' => $recipientId,
+            'channel' => $channel,
             'http' => $response->status(),
             'ok' => $ok,
             'response' => $response->json() ?? $response->body(),
@@ -62,19 +86,18 @@ class MetaService
      */
     public function fetchProfileName(string $userId, string $channel = 'messenger'): ?string
     {
-        $token = (string) config('services.meta.page_access_token');
+        ['base' => $base, 'token' => $token] = $this->endpoint($channel);
 
         if ($token === '' || $userId === '') {
             return null;
         }
 
-        $version = (string) config('services.meta.graph_version', 'v21.0');
         $fields = $channel === 'instagram' ? 'name,username' : 'first_name,last_name';
 
         try {
             $response = Http::withToken($token)
                 ->timeout(10)
-                ->get("https://graph.facebook.com/{$version}/{$userId}", ['fields' => $fields]);
+                ->get("{$base}/{$userId}", ['fields' => $fields]);
         } catch (\Throwable $e) {
             Log::info('meta.profile.exception', ['user' => $userId, 'message' => $e->getMessage()]);
 
