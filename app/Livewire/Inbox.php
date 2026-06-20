@@ -3,7 +3,9 @@
 namespace App\Livewire;
 
 use App\Models\Conversation;
+use App\Models\Setting;
 use App\Support\AiPersona;
+use App\Support\AiReply;
 use App\Support\Contracts\WhatsappGateway;
 use App\Support\LeadScoringService;
 use Illuminate\Support\Facades\Log;
@@ -88,6 +90,25 @@ class Inbox extends Component
         $this->selectedId = $id;
         $this->draft = '';
         $this->markRead();
+    }
+
+    /** Status jeda global AI (semua channel). */
+    #[Computed]
+    public function aiPaused(): bool
+    {
+        return AiReply::paused();
+    }
+
+    /** Jeda / aktifkan AI untuk SEMUA percakapan (mis. dimatikan saat malam). */
+    public function toggleAiPause(): void
+    {
+        $paused = ! AiReply::paused();
+        Setting::put('ai_paused', $paused ? 'true' : 'false');
+        unset($this->aiPaused);
+
+        $this->toast = $paused
+            ? 'AI dijeda — tidak membalas otomatis (semua channel)'
+            : 'AI diaktifkan kembali';
     }
 
     public function toggleAi(): void

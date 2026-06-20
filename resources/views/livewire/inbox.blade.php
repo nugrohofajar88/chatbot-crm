@@ -28,6 +28,12 @@
              :class="pane === 'list' ? 'flex' : 'hidden md:flex'">
             <div class="flex flex-none items-center px-4 py-3.5">
                 <span class="text-[11px] font-semibold uppercase tracking-[1.5px] text-ink-muted">{{ $this->conversations->count() }} Percakapan</span>
+                <button wire:click="toggleAiPause" title="Jeda / aktifkan AI untuk semua percakapan"
+                    class="ml-auto flex items-center gap-1.5 rounded-[10px] border border-line-2 px-2.5 py-2 text-[11px] font-semibold"
+                    style="{{ $this->aiPaused ? 'background:#EFE9DF;color:#9C8F7E' : 'background:rgba(176,85,47,0.12);color:#B0552F' }}">
+                    <span style="display:inline-block;width:7px;height:7px;border-radius:9999px;background:{{ $this->aiPaused ? '#9C8F7E' : '#3DA35D' }}"></span>
+                    {{ $this->aiPaused ? 'AI Dijeda' : 'AI Aktif' }}
+                </button>
             </div>
             <div class="flex-1 overflow-y-auto px-2.5 pb-3.5">
                 @foreach ($this->conversations as $c)

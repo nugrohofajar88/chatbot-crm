@@ -50,7 +50,7 @@ class WaInboundService
         $conv->increment('unread');
         $conv->update(['last_message_at' => now()]);
 
-        if ($conv->ai_enabled) {
+        if ($conv->ai_enabled && ! AiReply::paused()) {
             $this->autoReply($conv);
         }
 

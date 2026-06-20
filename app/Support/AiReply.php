@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Conversation;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 
 use function Laravel\Ai\agent;
@@ -14,6 +15,12 @@ use function Laravel\Ai\agent;
  */
 class AiReply
 {
+    /** Jeda global: bila true, semua auto-reply AI dihentikan (lead tetap tercatat). */
+    public static function paused(): bool
+    {
+        return filter_var(Setting::get('ai_paused', 'false'), FILTER_VALIDATE_BOOL);
+    }
+
     public static function generate(Conversation $conv): string
     {
         $conv->load(['messages' => fn ($q) => $q->orderBy('id')]);

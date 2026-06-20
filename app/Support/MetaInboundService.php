@@ -54,7 +54,7 @@ class MetaInboundService
         $conv->increment('unread');
         $conv->update(['last_message_at' => now()]);
 
-        if ($conv->ai_enabled) {
+        if ($conv->ai_enabled && ! AiReply::paused()) {
             $this->autoReply($conv, $psid);
         }
 
@@ -178,6 +178,13 @@ class MetaInboundService
         );
         $conv->messages()->create(['direction' => 'in', 'sender' => 'lead', 'body' => '💬 [Komentar] '.$text, 'type' => 'text']);
         $conv->increment('unread');
+
+        // Jeda global AI: lead tetap tercatat, tapi tidak ada balasan (hemat token).
+        if (AiReply::paused()) {
+            $conv->update(['last_message_at' => now()]);
+
+            return;
+        }
 
         // 2. Balas komentar PUBLIK — opsional (butuh pages_manage_engagement).
         //    Bila terkirim, catat juga ke thread.

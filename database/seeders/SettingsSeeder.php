@@ -28,6 +28,7 @@ class SettingsSeeder extends Seeder
             ['OPENROUTER_MODEL', 'ai', 'Model OpenRouter (format vendor/model)', 'openai/gpt-4o-mini'],
             ['ai_persona', 'ai', 'Instruksi/persona sistem AI (kosong = pakai default bawaan)'],
             ['scoring_interval', 'ai', 'Auto-scoring tiap N pesan lead (0 = manual)', '3'],
+            ['ai_paused', 'ai', 'Jeda global auto-reply AI (true = AI berhenti membalas otomatis, semua channel)', 'false'],
 
             // ===== WhatsApp =====
             ['WHATSAPP_DRIVER', 'whatsapp', 'Driver WhatsApp aktif: fonnte | wablas', 'fonnte'],
