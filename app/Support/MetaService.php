@@ -14,14 +14,15 @@ use Illuminate\Support\Facades\Log;
  */
 class MetaService
 {
-    public function sendMessage(string $recipientId, string $text): bool
+    /** Kirim pesan teks. Mengembalikan message_id Meta bila sukses, null bila gagal. */
+    public function sendMessage(string $recipientId, string $text): ?string
     {
         $token = (string) config('services.meta.page_access_token');
 
         if ($token === '') {
             Log::error('meta.send.no_token');
 
-            return false;
+            return null;
         }
 
         $version = (string) config('services.meta.graph_version', 'v21.0');
@@ -38,10 +39,11 @@ class MetaService
         } catch (\Throwable $e) {
             Log::error('meta.send.exception', ['recipient' => $recipientId, 'message' => $e->getMessage()]);
 
-            return false;
+            return null;
         }
 
         $ok = $response->successful();
+        $messageId = (string) $response->json('message_id', '');
 
         Log::info('meta.send', [
             'recipient' => $recipientId,
@@ -50,7 +52,7 @@ class MetaService
             'response' => $response->json() ?? $response->body(),
         ]);
 
-        return $ok;
+        return $ok ? ($messageId !== '' ? $messageId : 'sent') : null;
     }
 
     /**

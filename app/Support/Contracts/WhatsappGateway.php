@@ -8,11 +8,11 @@ namespace App\Support\Contracts;
  */
 interface WhatsappGateway
 {
-    /** Kirim pesan teks. */
-    public function sendMessage(string $phone, string $message): bool;
+    /** Kirim pesan teks. Mengembalikan message id gateway bila sukses, null bila gagal. */
+    public function sendMessage(string $phone, string $message): ?string;
 
-    /** Kirim media (gambar/dokumen) dari URL publik. */
-    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): bool;
+    /** Kirim media (gambar/dokumen) dari URL publik. Mengembalikan message id atau null. */
+    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): ?string;
 
     /** Normalkan nomor (08xx -> 62xx). */
     public function normalize(string $phone): string;

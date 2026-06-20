@@ -130,7 +130,9 @@ class Inbox extends Component
             return;
         }
 
-        if (! $wa->sendMessage($conv->contact->phone, $body)) {
+        $mid = $wa->sendMessage($conv->contact->phone, $body);
+
+        if ($mid === null) {
             $this->toast = 'Gagal mengirim, coba lagi';
 
             return;
@@ -141,6 +143,7 @@ class Inbox extends Component
             'sender' => 'operator',
             'body' => $body,
             'type' => 'text',
+            'wa_message_id' => $mid,
         ]);
         $conv->update(['last_message_at' => now(), 'unread' => 0]);
 
@@ -166,13 +169,15 @@ class Inbox extends Component
 
         // 1. Coba kirim sebagai MEDIA (berfungsi di Fonnte berbayar).
         $delivery = 'failed';
-        if ($wa->sendMedia($conv->contact->phone, $publicUrl, $filename, $caption)) {
+        $mid = $wa->sendMedia($conv->contact->phone, $publicUrl, $filename, $caption);
+        if ($mid !== null) {
             $delivery = 'media';
         } else {
             // 2. Fallback: kirim LINK sebagai teks (andal di plan gratis / semua gateway).
             //    Pola sama seperti larashop-be (link dimasukkan ke pesan teks).
             $linkText = ($caption !== '' ? $caption."\n\n" : '').'📎 Lihat lampiran: '.$publicUrl;
-            if ($wa->sendMessage($conv->contact->phone, $linkText)) {
+            $mid = $wa->sendMessage($conv->contact->phone, $linkText);
+            if ($mid !== null) {
                 $delivery = 'link';
             }
         }
@@ -187,6 +192,7 @@ class Inbox extends Component
             'body' => $caption,
             'type' => $isImage ? 'image' : 'document',
             'payload' => ['path' => $path, 'name' => $filename, 'delivery' => $delivery],
+            'wa_message_id' => $mid,
         ]);
         $conv->update(['last_message_at' => now(), 'unread' => 0]);
 

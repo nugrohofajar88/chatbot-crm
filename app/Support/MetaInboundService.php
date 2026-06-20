@@ -4,7 +4,9 @@ namespace App\Support;
 
 use App\Models\Contact;
 use App\Models\Conversation;
+use App\Models\Message;
 use App\Models\Setting;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -76,14 +78,79 @@ class MetaInboundService
             return;
         }
 
-        if ($this->meta->sendMessage($psid, $reply)) {
+        $mid = $this->meta->sendMessage($psid, $reply);
+
+        if ($mid !== null) {
             $conv->messages()->create([
                 'direction' => 'out',
                 'sender' => 'ai',
                 'body' => $reply,
                 'type' => 'text',
+                'wa_message_id' => $mid,   // untuk dedup gema (echo) balasan ini
             ]);
             $conv->update(['last_message_at' => now()]);
         }
+    }
+
+    /**
+     * Gema (echo) pesan keluar atas nama Page — termasuk balasan yang dikirim
+     * manual dari Facebook Page Inbox / Business Suite. Disimpan ke thread agar
+     * CRM tetap sinkron. Echo dari balasan kita sendiri di-skip lewat dedup mid.
+     */
+    public function handleEcho(string $channel, string $leadPsid, string $text, string $mid): void
+    {
+        if ($leadPsid === '' || $text === '') {
+            return;
+        }
+
+        // Balasan kita sendiri sudah tersimpan (wa_message_id = mid) -> lewati.
+        if ($mid !== '' && Message::where('wa_message_id', $mid)->exists()) {
+            return;
+        }
+
+        $conv = $this->findConversation($channel, $leadPsid);
+        if (! $conv) {
+            return;
+        }
+
+        $conv->messages()->create([
+            'direction' => 'out',
+            'sender' => 'operator',   // dikirim manusia dari tool Meta
+            'body' => $text,
+            'type' => 'text',
+            'wa_message_id' => $mid ?: null,
+        ]);
+        $conv->update(['last_message_at' => now()]);
+    }
+
+    /** Tandai pesan keluar s.d. watermark sebagai sudah dibaca lead. */
+    public function markRead(string $channel, string $leadPsid, ?int $watermarkMs): void
+    {
+        if (! $watermarkMs || ! $conv = $this->findConversation($channel, $leadPsid)) {
+            return;
+        }
+
+        $conv->update(['last_read_at' => Carbon::createFromTimestampMs($watermarkMs)]);
+    }
+
+    /** Tandai pesan keluar s.d. watermark sebagai sudah sampai (delivered). */
+    public function markDelivered(string $channel, string $leadPsid, ?int $watermarkMs): void
+    {
+        if (! $watermarkMs || ! $conv = $this->findConversation($channel, $leadPsid)) {
+            return;
+        }
+
+        $conv->update(['last_delivered_at' => Carbon::createFromTimestampMs($watermarkMs)]);
+    }
+
+    private function findConversation(string $channel, string $leadPsid): ?Conversation
+    {
+        if ($leadPsid === '') {
+            return null;
+        }
+
+        $contact = Contact::where('channel', $channel)->where('psid', $leadPsid)->first();
+
+        return $contact?->conversations()->where('channel', $channel)->first();
     }
 }

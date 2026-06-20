@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\Route;
 Route::match(['get', 'post'], 'webhooks/fonnte/{secret?}', [FonnteWebhookController::class, 'handle'])
     ->name('webhooks.fonnte');
 
+// Tracking/status callback Wablas (delivered/read). HARUS didaftarkan sebelum
+// route 'webhooks/wablas/{secret?}' agar segmen 'tracking' tak dianggap secret.
+Route::match(['get', 'post'], 'webhooks/wablas/tracking/{secret?}', [WablasWebhookController::class, 'track'])
+    ->name('webhooks.wablas.tracking');
+
 Route::match(['get', 'post'], 'webhooks/wablas/{secret?}', [WablasWebhookController::class, 'handle'])
     ->name('webhooks.wablas');
 

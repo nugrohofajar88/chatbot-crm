@@ -12,6 +12,7 @@ class Conversation extends Model
     protected $fillable = [
         'contact_id', 'channel', 'stage', 'temperature', 'score',
         'ai_enabled', 'summary', 'last_message_at', 'unread',
+        'last_delivered_at', 'last_read_at',
     ];
 
     protected function casts(): array
@@ -19,6 +20,8 @@ class Conversation extends Model
         return [
             'ai_enabled' => 'boolean',
             'last_message_at' => 'datetime',
+            'last_delivered_at' => 'datetime',
+            'last_read_at' => 'datetime',
         ];
     }
 

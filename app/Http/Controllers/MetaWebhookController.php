@@ -72,16 +72,41 @@ class MetaWebhookController extends Controller
         return response()->json(['status' => 'ok']);
     }
 
-    /** Proses satu event messaging: hanya pesan teks dari pengguna. */
+    /** Proses satu event messaging: pesan masuk, gema keluar, read & delivery receipt. */
     private function handleEvent(MetaInboundService $inbound, string $channel, array $event): void
     {
-        $message = $event['message'] ?? null;
+        // Read receipt: lead membaca pesan kita (sampai watermark).
+        if (isset($event['read']['watermark'])) {
+            $inbound->markRead($channel, (string) ($event['sender']['id'] ?? ''), (int) $event['read']['watermark']);
 
-        // Abaikan echo (balasan kita sendiri), delivery, read, postback, dll.
-        if (! is_array($message) || ($message['is_echo'] ?? false)) {
             return;
         }
 
+        // Delivery receipt: pesan kita sampai ke lead (sampai watermark).
+        if (isset($event['delivery']['watermark'])) {
+            $inbound->markDelivered($channel, (string) ($event['sender']['id'] ?? ''), (int) $event['delivery']['watermark']);
+
+            return;
+        }
+
+        $message = $event['message'] ?? null;
+        if (! is_array($message)) {
+            return; // postback / event lain yang belum ditangani
+        }
+
+        // Gema pesan keluar (termasuk balasan manual dari Page Inbox). recipient = lead.
+        if ($message['is_echo'] ?? false) {
+            $inbound->handleEcho(
+                $channel,
+                trim((string) ($event['recipient']['id'] ?? '')),
+                trim((string) ($message['text'] ?? '')),
+                trim((string) ($message['mid'] ?? '')),
+            );
+
+            return;
+        }
+
+        // Pesan masuk dari lead.
         $psid = trim((string) ($event['sender']['id'] ?? ''));
         $text = trim((string) ($message['text'] ?? ''));
 

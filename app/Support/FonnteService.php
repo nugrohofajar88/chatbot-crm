@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Log;
  */
 class FonnteService implements WhatsappGateway
 {
-    public function sendMessage(string $phone, string $message): bool
+    public function sendMessage(string $phone, string $message): ?string
     {
         $base = rtrim((string) config('services.fonnte.base_url', 'https://api.fonnte.com'), '/');
         $token = (string) config('services.fonnte.token');
@@ -24,7 +24,7 @@ class FonnteService implements WhatsappGateway
         if ($token === '') {
             Log::error('fonnte.send.no_token');
 
-            return false;
+            return null;
         }
 
         try {
@@ -38,7 +38,7 @@ class FonnteService implements WhatsappGateway
         } catch (\Throwable $e) {
             Log::error('fonnte.send.exception', ['phone' => $phone, 'message' => $e->getMessage()]);
 
-            return false;
+            return null;
         }
 
         $ok = $response->successful() && (bool) data_get($response->json(), 'status', false);
@@ -49,7 +49,7 @@ class FonnteService implements WhatsappGateway
             'ok' => $ok,
         ]);
 
-        return $ok;
+        return $ok ? ((string) data_get($response->json(), 'id.0', '') ?: 'sent') : null;
     }
 
     /**
@@ -57,7 +57,7 @@ class FonnteService implements WhatsappGateway
      * (Fonnte mengambil file dari URL ini). `filename` dengan ekstensi WAJIB
      * supaya Fonnte mengenali tipe file.
      */
-    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): bool
+    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): ?string
     {
         $base = rtrim((string) config('services.fonnte.base_url', 'https://api.fonnte.com'), '/');
         $token = (string) config('services.fonnte.token');
@@ -65,7 +65,7 @@ class FonnteService implements WhatsappGateway
         if ($token === '') {
             Log::error('fonnte.media.no_token');
 
-            return false;
+            return null;
         }
 
         try {
@@ -81,7 +81,7 @@ class FonnteService implements WhatsappGateway
         } catch (\Throwable $e) {
             Log::error('fonnte.media.exception', ['phone' => $phone, 'message' => $e->getMessage()]);
 
-            return false;
+            return null;
         }
 
         $ok = $response->successful() && (bool) data_get($response->json(), 'status', false);
@@ -94,7 +94,7 @@ class FonnteService implements WhatsappGateway
             'response' => $response->json() ?? $response->body(),
         ]);
 
-        return $ok;
+        return $ok ? ((string) data_get($response->json(), 'id.0', '') ?: 'sent') : null;
     }
 
     /** Fonnte terima 08xx maupun 62xx; normalkan ke 62 untuk konsisten. */

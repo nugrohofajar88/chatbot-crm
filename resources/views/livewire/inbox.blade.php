@@ -13,6 +13,8 @@
         return 'Rp '.number_format($n, 0, ',', '.');
     };
     $sel = $this->selected;
+    // Pesan keluar terakhir — untuk menampilkan status Terkirim/Dibaca (khusus Meta).
+    $lastOutId = $sel?->messages->where('direction', 'out')->last()?->id;
 @endphp
 
 <div x-data="{ pane: 'list', confirmDelete: false }" class="flex h-full flex-col">
@@ -141,6 +143,15 @@
                                 @endif
                             </div>
                             <div class="mt-1 text-[10.5px] text-[#B0A493] {{ $isLead ? 'text-left' : 'text-right' }}">{{ $m->created_at->format('H:i') }}</div>
+                            @if ($m->id === $lastOutId)
+                                @php
+                                    $receipt = $sel->last_read_at && $m->created_at <= $sel->last_read_at ? 'read'
+                                        : ($sel->last_delivered_at && $m->created_at <= $sel->last_delivered_at ? 'delivered' : null);
+                                @endphp
+                                @if ($receipt)
+                                    <div class="mt-0.5 text-[10px] text-[#B0A493] text-right">{{ $receipt === 'read' ? '✓✓ Dibaca' : '✓ Terkirim' }}</div>
+                                @endif
+                            @endif
                         </div>
                     @endforeach
                 </div>

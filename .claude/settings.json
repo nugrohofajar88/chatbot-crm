@@ -3,7 +3,10 @@
     "allow": [
       "Bash(php artisan *)",
       "PowerShell(php artisan migrate --force 2>&1)",
-      "PowerShell(php artisan route:list --path=webhooks 2>&1)"
+      "PowerShell(php artisan route:list --path=webhooks 2>&1)",
+      "PowerShell(php artisan config:clear)",
+      "PowerShell(php meta_smoke_test.php)",
+      "PowerShell(php artisan route:list --path=webhooks/meta 2>&1)"
     ]
   }
 }

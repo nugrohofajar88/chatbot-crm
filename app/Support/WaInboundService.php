@@ -77,12 +77,15 @@ class WaInboundService
             return;
         }
 
-        if ($this->wa->sendMessage($conv->contact->phone, $reply)) {
+        $mid = $this->wa->sendMessage($conv->contact->phone, $reply);
+
+        if ($mid !== null) {
             $conv->messages()->create([
                 'direction' => 'out',
                 'sender' => 'ai',
                 'body' => $reply,
                 'type' => 'text',
+                'wa_message_id' => $mid,
             ]);
             $conv->update(['last_message_at' => now()]);
         }
