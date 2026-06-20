@@ -131,10 +131,15 @@ class MetaService
             return null;
         }
 
+        // Cara Messenger Platform yang benar: Send API dgn recipient.comment_id
+        // (Meta me-resolve komentar → penerima pesan). Bukan edge /private_replies.
         try {
             $response = Http::withToken($token)
                 ->timeout(20)
-                ->post("{$base}/{$commentId}/private_replies", ['message' => $text]);
+                ->post("{$base}/me/messages", [
+                    'recipient' => ['comment_id' => $commentId],
+                    'message' => ['text' => $text],
+                ]);
         } catch (\Throwable $e) {
             Log::error('meta.private_reply.exception', ['comment' => $commentId, 'message' => $e->getMessage()]);
 
