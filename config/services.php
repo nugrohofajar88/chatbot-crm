@@ -62,6 +62,11 @@ return [
         'ig_access_token' => env('META_IG_ACCESS_TOKEN'),        // Instagram Login (graph.instagram.com)
         'ig_app_secret' => env('META_IG_APP_SECRET'),            // utk verifikasi signature webhook IG
         'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
+
+        // Saklar per-channel: nonaktifkan bila izin belum siap. Webhook channel
+        // yang dimatikan diabaikan (pesan tidak diproses). Nyalakan lagi tanpa ubah kode.
+        'messenger_enabled' => env('META_MESSENGER_ENABLED', true),
+        'instagram_enabled' => env('META_INSTAGRAM_ENABLED', true),
     ],
 
 ];

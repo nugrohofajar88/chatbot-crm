@@ -50,7 +50,6 @@ class MetaWebhookController extends Controller
         }
 
         $payload = $request->all();
-        Log::info('meta.webhook.received', ['payload' => $payload]);
 
         $channel = match ((string) ($payload['object'] ?? '')) {
             'instagram' => 'instagram',
@@ -58,9 +57,13 @@ class MetaWebhookController extends Controller
             default => null,
         };
 
-        if ($channel === null) {
+        // Abaikan channel tak dikenal ATAU yang dimatikan lewat config
+        // (services.meta.messenger_enabled / instagram_enabled).
+        if ($channel === null || ! config("services.meta.{$channel}_enabled", true)) {
             return response()->json(['status' => 'ignored']);
         }
+
+        Log::info('meta.webhook.received', ['payload' => $payload]);
 
         foreach ((array) ($payload['entry'] ?? []) as $entry) {
             foreach ((array) ($entry['messaging'] ?? []) as $event) {
