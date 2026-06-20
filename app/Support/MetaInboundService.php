@@ -143,6 +143,16 @@ class MetaInboundService
         $conv->update(['last_delivered_at' => Carbon::createFromTimestampMs($watermarkMs)]);
     }
 
+    /** Komentar masuk (Instagram) -> balasan AI publik singkat via Graph. */
+    public function handleComment(string $channel, string $commentId, string $text, ?string $username = null): void
+    {
+        $reply = AiReply::comment($text, $username);
+
+        if ($reply !== '') {
+            $this->meta->replyToComment($commentId, $reply, $channel);
+        }
+    }
+
     private function findConversation(string $channel, string $leadPsid): ?Conversation
     {
         if ($leadPsid === '') {

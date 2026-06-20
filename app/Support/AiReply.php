@@ -35,4 +35,25 @@ class AiReply
             return '';
         }
     }
+
+    /** Balasan AI singkat untuk komentar PUBLIK (Instagram). '' bila gagal. */
+    public static function comment(string $commentText, ?string $username = null): string
+    {
+        $who = $username ? "@{$username}" : 'seseorang';
+
+        $prompt = "Seseorang ({$who}) menulis komentar publik di postingan kami:\n"
+            ."\"{$commentText}\"\n\n"
+            .'Tulis SATU balasan komentar yang SANGAT singkat (maks 1-2 kalimat), ramah, sesuai peranmu. '
+            .'Ini PUBLIK: jangan bagikan info sensitif; bila relevan, ajak lanjut lewat DM. Hanya teks balasannya, tanpa label.';
+
+        try {
+            $res = agent(instructions: AiPersona::instructions())->prompt($prompt);
+
+            return trim(preg_replace('/^["\']|["\']$/', '', $res->text));
+        } catch (\Throwable $e) {
+            Log::warning('ai.comment.failed', ['error' => $e->getMessage()]);
+
+            return '';
+        }
+    }
 }

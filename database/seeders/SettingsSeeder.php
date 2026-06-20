@@ -47,7 +47,8 @@ class SettingsSeeder extends Seeder
             ['META_IG_APP_SECRET', 'meta', 'Instagram App Secret (verifikasi signature IG)'],
             ['META_GRAPH_VERSION', 'meta', 'Versi Graph API', 'v21.0'],
             ['META_MESSENGER_ENABLED', 'meta', 'Aktifkan Messenger (true/false)', 'true'],
-            ['META_INSTAGRAM_ENABLED', 'meta', 'Aktifkan Instagram (true/false)', 'true'],
+            ['META_INSTAGRAM_ENABLED', 'meta', 'Aktifkan Instagram DM (true/false)', 'true'],
+            ['META_INSTAGRAM_COMMENTS_ENABLED', 'meta', 'Auto-reply AI ke komentar IG — PUBLIK (true/false)', 'true'],
         ];
 
         foreach ($defs as $d) {

@@ -66,13 +66,54 @@ class MetaWebhookController extends Controller
         Log::info('meta.webhook.received', ['payload' => $payload]);
 
         foreach ((array) ($payload['entry'] ?? []) as $entry) {
+            $businessId = (string) ($entry['id'] ?? '');
+
+            // Pesan/DM, read, delivery, echo.
             foreach ((array) ($entry['messaging'] ?? []) as $event) {
                 $this->handleEvent($inbound, $channel, $event);
+            }
+
+            // Komentar (entry[].changes[] field=comments).
+            foreach ((array) ($entry['changes'] ?? []) as $change) {
+                $this->handleChange($inbound, $channel, $businessId, $change);
             }
         }
 
         // Selalu balas 200 cepat supaya Meta tidak menonaktifkan webhook.
         return response()->json(['status' => 'ok']);
+    }
+
+    /**
+     * Proses event komentar (entry[].changes[] field=comments) -> auto-reply AI publik.
+     * Mengabaikan komentar/balasan dari akun bisnis sendiri (anti-loop).
+     */
+    private function handleChange(MetaInboundService $inbound, string $channel, string $businessId, array $change): void
+    {
+        if (($change['field'] ?? '') !== 'comments') {
+            return;
+        }
+
+        if (! config('services.meta.instagram_comments_enabled', true)) {
+            return;
+        }
+
+        $value = (array) ($change['value'] ?? []);
+        $commentId = trim((string) ($value['id'] ?? ''));
+        $text = trim((string) ($value['text'] ?? ''));
+        $fromId = trim((string) ($value['from']['id'] ?? ''));
+        $username = trim((string) ($value['from']['username'] ?? '')) ?: null;
+
+        // Abaikan: kosong, atau komentar/balasan dari akun bisnis sendiri (cegah loop).
+        if ($commentId === '' || $text === '' || ($businessId !== '' && $fromId === $businessId)) {
+            return;
+        }
+
+        // Dedup (Meta bisa mengirim ulang event komentar yang sama).
+        if (! Cache::add('meta:comment:'.$commentId, 1, now()->addMinutes(10))) {
+            return;
+        }
+
+        $inbound->handleComment($channel, $commentId, $text, $username);
     }
 
     /** Proses satu event messaging: pesan masuk, gema keluar, read & delivery receipt. */

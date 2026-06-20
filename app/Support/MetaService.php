@@ -79,6 +79,41 @@ class MetaService
         return $ok ? ($messageId !== '' ? $messageId : 'sent') : null;
     }
 
+    /** Balas komentar (Instagram) via Graph: POST /{comment-id}/replies. */
+    public function replyToComment(string $commentId, string $text, string $channel = 'instagram'): ?string
+    {
+        ['base' => $base, 'token' => $token] = $this->endpoint($channel);
+
+        if ($token === '' || $commentId === '') {
+            Log::error('meta.comment.no_token', ['channel' => $channel]);
+
+            return null;
+        }
+
+        try {
+            $response = Http::withToken($token)
+                ->timeout(20)
+                ->post("{$base}/{$commentId}/replies", ['message' => $text]);
+        } catch (\Throwable $e) {
+            Log::error('meta.comment.exception', ['comment' => $commentId, 'message' => $e->getMessage()]);
+
+            return null;
+        }
+
+        $ok = $response->successful();
+        $id = (string) $response->json('id', '');
+
+        Log::info('meta.comment.reply', [
+            'comment' => $commentId,
+            'channel' => $channel,
+            'http' => $response->status(),
+            'ok' => $ok,
+            'response' => $response->json() ?? $response->body(),
+        ]);
+
+        return $ok ? ($id !== '' ? $id : 'sent') : null;
+    }
+
     /**
      * Ambil nama pengguna dari PSID/IGSID via Graph User Profile API.
      * Butuh izin pages_messaging (Messenger) / instagram_manage_messages (IG)
