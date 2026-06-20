@@ -100,6 +100,28 @@ class Inbox extends Component
         $this->toast = $conv->ai_enabled ? 'AI Otomatis diaktifkan' : 'AI dimatikan, Anda mengambil alih';
     }
 
+    /** Hapus percakapan terpilih (pesan & skor lead ikut terhapus via cascade). */
+    public function deleteConversation(): void
+    {
+        $conv = $this->selected();
+        if (! $conv) {
+            return;
+        }
+
+        $name = $conv->contact->name;
+        $conv->delete();
+
+        // Pindah ke percakapan terbaru berikutnya (atau kosong bila habis).
+        $this->selectedId = Conversation::query()
+            ->orderByDesc('last_message_at')
+            ->value('id');
+        $this->draft = '';
+        unset($this->selected, $this->conversations);
+        $this->markRead();
+
+        $this->toast = 'Percakapan dengan '.$name.' dihapus';
+    }
+
     public function sendReply(WhatsappGateway $wa): void
     {
         $conv = $this->selected();

@@ -134,6 +134,15 @@ return [
         'openrouter' => [
             'driver' => 'openrouter',
             'key' => env('OPENROUTER_API_KEY'),
+            'models' => [
+                'text' => [
+                    // Model OpenRouter (format "vendor/model"), mis.
+                    // openai/gpt-4o-mini, anthropic/claude-haiku-4.5,
+                    // google/gemini-2.0-flash-001. Pilih model yang mendukung
+                    // structured output agar lead scoring tetap jalan.
+                    'default' => env('OPENROUTER_MODEL', 'openai/gpt-4o-mini'),
+                ],
+            ],
         ],
 
         'voyageai' => [
