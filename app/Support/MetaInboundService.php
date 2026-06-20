@@ -30,9 +30,12 @@ class MetaInboundService
             ['name' => $name ?: $placeholder, 'lead_since' => now()],
         );
 
-        // Lengkapi nama bila sebelumnya masih placeholder.
-        if ($name && in_array($contact->name, ['', $placeholder], true)) {
-            $contact->update(['name' => $name]);
+        // Lengkapi nama dari profil Meta bila masih placeholder (sekali per kontak baru).
+        if (in_array($contact->name, ['', $placeholder], true)) {
+            $resolved = $name ?: $this->meta->fetchProfileName($psid, $channel);
+            if ($resolved) {
+                $contact->update(['name' => $resolved]);
+            }
         }
 
         $conv = $contact->conversations()->firstOrCreate(

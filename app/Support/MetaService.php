@@ -54,6 +54,47 @@ class MetaService
     }
 
     /**
+     * Ambil nama pengguna dari PSID/IGSID via Graph User Profile API.
+     * Butuh izin pages_messaging (Messenger) / instagram_manage_messages (IG)
+     * dan pengguna sudah pernah mengirim pesan. Mengembalikan null bila gagal.
+     */
+    public function fetchProfileName(string $userId, string $channel = 'messenger'): ?string
+    {
+        $token = (string) config('services.meta.page_access_token');
+
+        if ($token === '' || $userId === '') {
+            return null;
+        }
+
+        $version = (string) config('services.meta.graph_version', 'v21.0');
+        $fields = $channel === 'instagram' ? 'name,username' : 'first_name,last_name';
+
+        try {
+            $response = Http::withToken($token)
+                ->timeout(10)
+                ->get("https://graph.facebook.com/{$version}/{$userId}", ['fields' => $fields]);
+        } catch (\Throwable $e) {
+            Log::info('meta.profile.exception', ['user' => $userId, 'message' => $e->getMessage()]);
+
+            return null;
+        }
+
+        if (! $response->successful()) {
+            Log::info('meta.profile.failed', ['user' => $userId, 'error' => $response->json('error') ?? $response->body()]);
+
+            return null;
+        }
+
+        $j = $response->json();
+
+        $name = $channel === 'instagram'
+            ? (trim((string) ($j['name'] ?? '')) ?: trim((string) ($j['username'] ?? '')))
+            : trim(trim((string) ($j['first_name'] ?? '')).' '.trim((string) ($j['last_name'] ?? '')));
+
+        return $name !== '' ? $name : null;
+    }
+
+    /**
      * Verifikasi header X-Hub-Signature-256 terhadap body mentah memakai app_secret.
      * Bila app_secret belum diset (mode dev), verifikasi dilewati.
      */
