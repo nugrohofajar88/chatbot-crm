@@ -9,6 +9,9 @@ Route::redirect('/', '/inbox');
 Route::get('/inbox', Inbox::class)->name('inbox');
 Route::get('/settings', Settings::class)->name('settings');
 
+// Halaman publik kebijakan privasi (dibutuhkan untuk menerbitkan app Meta).
+Route::view('/privacy', 'privacy')->name('privacy');
+
 // Placeholder modul lain (dibangun bertahap)
 $placeholders = [
     'dashboard' => 'Dashboard',

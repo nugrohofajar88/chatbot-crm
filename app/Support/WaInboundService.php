@@ -8,8 +8,6 @@ use App\Models\Setting;
 use App\Support\Contracts\WhatsappGateway;
 use Illuminate\Support\Facades\Log;
 
-use function Laravel\Ai\agent;
-
 /**
  * Memproses pesan WhatsApp masuk untuk CRM:
  *   1. Cari/buat Contact + Conversation.
@@ -71,38 +69,23 @@ class WaInboundService
 
     protected function autoReply(Conversation $conv): void
     {
-        $conv->load(['messages' => fn ($q) => $q->orderBy('id'), 'contact']);
+        $conv->loadMissing('contact');
 
-        $history = $conv->messages
-            ->map(fn ($m) => ($m->sender === 'lead' ? 'Pengguna' : 'Asisten').': '.$m->body)
-            ->implode("\n");
-
-        $instructions = AiPersona::instructions();
-
-        $prompt = "Riwayat percakapan:\n{$history}\n\n"
-            .'Tulis SATU balasan terbaik untuk pesan terakhir pengguna, sesuai peranmu. Hanya teks balasannya, tanpa label.';
-
-        try {
-            $res = agent(instructions: $instructions)->prompt($prompt);
-            $reply = trim(preg_replace('/^["\']|["\']$/', '', $res->text));
-        } catch (\Throwable $e) {
-            Log::warning('wa.autoreply.ai_failed', ['conversation' => $conv->id, 'error' => $e->getMessage()]);
-
-            return;
-        }
+        $reply = AiReply::generate($conv);
 
         if ($reply === '') {
             return;
         }
 
-        $sent = $this->wa->sendMessage($conv->contact->phone, $reply);
+        $mid = $this->wa->sendMessage($conv->contact->phone, $reply);
 
-        if ($sent) {
+        if ($mid !== null) {
             $conv->messages()->create([
                 'direction' => 'out',
                 'sender' => 'ai',
                 'body' => $reply,
                 'type' => 'text',
+                'wa_message_id' => $mid,
             ]);
             $conv->update(['last_message_at' => now()]);
         }

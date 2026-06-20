@@ -53,4 +53,20 @@ return [
         'webhook_secret' => env('WABLAS_WEBHOOK_SECRET'),
     ],
 
+    // Meta: Facebook Messenger & Instagram (Graph API + Webhooks).
+    'meta' => [
+        'app_id' => env('META_APP_ID'),
+        'app_secret' => env('META_APP_SECRET'),
+        'verify_token' => env('META_VERIFY_TOKEN'),
+        'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),    // Messenger (graph.facebook.com)
+        'ig_access_token' => env('META_IG_ACCESS_TOKEN'),        // Instagram Login (graph.instagram.com)
+        'ig_app_secret' => env('META_IG_APP_SECRET'),            // utk verifikasi signature webhook IG
+        'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
+
+        // Saklar per-channel: nonaktifkan bila izin belum siap. Webhook channel
+        // yang dimatikan diabaikan (pesan tidak diproses). Nyalakan lagi tanpa ubah kode.
+        'messenger_enabled' => env('META_MESSENGER_ENABLED', true),
+        'instagram_enabled' => env('META_INSTAGRAM_ENABLED', true),
+    ],
+
 ];

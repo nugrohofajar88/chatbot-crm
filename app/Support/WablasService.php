@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  */
 class WablasService implements WhatsappGateway
 {
-    public function sendMessage(string $phone, string $message): bool
+    public function sendMessage(string $phone, string $message): ?string
     {
         return $this->send('/api/send-message', [
             'phone' => $this->normalize($phone),
@@ -25,7 +25,7 @@ class WablasService implements WhatsappGateway
         ], $phone);
     }
 
-    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): bool
+    public function sendMedia(string $phone, string $url, string $filename, string $caption = ''): ?string
     {
         $isImage = preg_match('/\.(jpe?g|png|webp|gif)$/i', $filename) === 1;
 
@@ -54,7 +54,7 @@ class WablasService implements WhatsappGateway
         return $p;
     }
 
-    protected function send(string $endpoint, array $payload, string $phone): bool
+    protected function send(string $endpoint, array $payload, string $phone): ?string
     {
         $base = rtrim((string) config('services.wablas.base_url', 'https://wablas.com'), '/');
         $token = (string) config('services.wablas.token');
@@ -63,7 +63,7 @@ class WablasService implements WhatsappGateway
         if ($token === '') {
             Log::error('wablas.send.no_token');
 
-            return false;
+            return null;
         }
 
         // Wablas v2: Authorization = "{token}.{secret}"; v1: cukup "{token}".
@@ -77,10 +77,11 @@ class WablasService implements WhatsappGateway
         } catch (\Throwable $e) {
             Log::error('wablas.send.exception', ['phone' => $phone, 'endpoint' => $endpoint, 'message' => $e->getMessage()]);
 
-            return false;
+            return null;
         }
 
         $ok = $response->successful() && (bool) data_get($response->json(), 'status', false);
+        $messageId = (string) data_get($response->json(), 'data.messages.0.id', '');
 
         Log::info('wablas.send', [
             'phone' => $phone,
@@ -90,6 +91,8 @@ class WablasService implements WhatsappGateway
             'response' => $response->json() ?? $response->body(),
         ]);
 
-        return $ok;
+        // Sukses: kembalikan message id (untuk pelacakan status). Bila id tak ada
+        // di response, pakai sentinel 'sent' agar tetap dianggap berhasil.
+        return $ok ? ($messageId !== '' ? $messageId : 'sent') : null;
     }
 }

@@ -6,12 +6,15 @@
     $badgeBg = ['hot' => '#F3DED2', 'warm' => '#F4E9D0', 'cold' => '#E8E6DE'];
     $badgeFg = ['hot' => '#9C4A24', 'warm' => '#8C6E26', 'cold' => '#6E6A5E'];
     $stageLabel = ['baru' => 'Baru', 'terkualifikasi' => 'Terkualifikasi', 'viewing' => 'Viewing', 'negosiasi' => 'Negosiasi', 'closing' => 'Closing'];
+    $channelLabel = ['whatsapp' => 'WhatsApp', 'messenger' => 'Messenger', 'instagram' => 'Instagram'];
     $rupiah = function ($n) {
         if ($n >= 1_000_000_000) return 'Rp '.rtrim(rtrim(number_format($n / 1_000_000_000, 1, ',', '.'), '0'), ',').' M';
         if ($n >= 1_000_000) return 'Rp '.round($n / 1_000_000).' jt';
         return 'Rp '.number_format($n, 0, ',', '.');
     };
     $sel = $this->selected;
+    // Pesan keluar terakhir — untuk menampilkan status Terkirim/Dibaca (khusus Meta).
+    $lastOutId = $sel?->messages->where('direction', 'out')->last()?->id;
 @endphp
 
 <div x-data="{ pane: 'list', confirmDelete: false }" class="flex h-full flex-col">
@@ -42,7 +45,7 @@
                                     <span class="flex-1 truncate text-[13.5px] font-semibold text-[#2C2620]">{{ $c->contact->name }}</span>
                                     <span class="flex-none text-[11px] text-[#A89C8C]">{{ optional($c->last_message_at)->format('H:i') }}</span>
                                 </div>
-                                <div class="mt-px text-[11px] text-[#9C8F7E]">WhatsApp &middot; {{ $stageLabel[$c->stage] ?? $c->stage }}</div>
+                                <div class="mt-px text-[11px] text-[#9C8F7E]">{{ $channelLabel[$c->channel] ?? 'WhatsApp' }} &middot; {{ $stageLabel[$c->stage] ?? $c->stage }}</div>
                             </div>
                         </div>
                         <div class="mt-2 flex items-center gap-2">
@@ -72,7 +75,7 @@
                             <span class="flex-none rounded-full px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide"
                                   style="background: {{ $badgeBg[$sel->temperature] }}; color: {{ $badgeFg[$sel->temperature] }}">{{ $tempLabel[$sel->temperature] }}</span>
                         </div>
-                        <div class="mt-px truncate text-[12px] text-[#9C8F7E]">{{ $sel->contact->phone }} &middot; WhatsApp</div>
+                        <div class="mt-px truncate text-[12px] text-[#9C8F7E]">{{ $sel->contact->phone }}{{ $sel->contact->phone ? ' · ' : '' }}{{ $channelLabel[$sel->channel] ?? 'WhatsApp' }}</div>
                     </div>
                     <button wire:click="toggleAi"
                         class="flex flex-none items-center gap-1.5 rounded-[10px] border border-line-2 px-2.5 py-2 text-[12px] font-semibold md:px-3"
@@ -140,6 +143,15 @@
                                 @endif
                             </div>
                             <div class="mt-1 text-[10.5px] text-[#B0A493] {{ $isLead ? 'text-left' : 'text-right' }}">{{ $m->created_at->format('H:i') }}</div>
+                            @if ($m->id === $lastOutId)
+                                @php
+                                    $receipt = $sel->last_read_at && $m->created_at <= $sel->last_read_at ? 'read'
+                                        : ($sel->last_delivered_at && $m->created_at <= $sel->last_delivered_at ? 'delivered' : null);
+                                @endphp
+                                @if ($receipt)
+                                    <div class="mt-0.5 text-[10px] text-[#B0A493] text-right">{{ $receipt === 'read' ? '✓✓ Dibaca' : '✓ Terkirim' }}</div>
+                                @endif
+                            @endif
                         </div>
                     @endforeach
                 </div>
