@@ -14,7 +14,8 @@
     $sel = $this->selected;
 @endphp
 
-<div x-data="{ pane: 'list' }" class="flex h-full flex-col">
+<div x-data="{ pane: 'list', confirmDelete: false }" class="flex h-full flex-col">
+    <style>[x-cloak]{display:none!important}</style>
     <x-page-header title="Kotak Masuk" subtitle="{{ $this->conversations->count() }} percakapan WhatsApp" />
 
     <div class="flex min-h-0 flex-1">
@@ -83,9 +84,7 @@
                         class="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] border border-line-2 text-accent md:hidden">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
                     </button>
-                    <button wire:click="deleteConversation" x-on:click="pane = 'list'"
-                        wire:confirm="Hapus percakapan dengan {{ $sel->contact->name }}? Semua pesan & skor lead-nya ikut terhapus dan tidak bisa dikembalikan."
-                        title="Hapus percakapan"
+                    <button type="button" x-on:click="confirmDelete = true" title="Hapus percakapan"
                         class="flex h-9 w-9 flex-none items-center justify-center rounded-[10px] border border-line-2 text-ink-muted hover:border-[#C0562C]/50 hover:text-[#C0562C]">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
@@ -274,6 +273,44 @@
             </div>
         @endif
     </div>
+
+    {{-- modal konfirmasi hapus percakapan --}}
+    @if ($sel)
+        <div x-cloak x-show="confirmDelete" @keydown.escape.window="confirmDelete = false"
+             class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            {{-- backdrop --}}
+            <div x-show="confirmDelete" x-transition.opacity @click="confirmDelete = false"
+                 class="absolute inset-0 bg-[#2A241E]/45 backdrop-blur-[2px]"></div>
+            {{-- panel --}}
+            <div x-show="confirmDelete"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="relative w-full max-w-[400px] rounded-[18px] border border-line bg-panel p-6 shadow-[0_20px_50px_rgba(60,40,20,0.28)]">
+                <div class="mb-3.5 flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#F3DED2] text-[#C0562C]">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                </div>
+                <h3 class="font-serif text-[19px] font-semibold text-ink-strong">Hapus percakapan?</h3>
+                <p class="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
+                    Percakapan dengan <b class="text-ink">{{ $sel->contact->name }}</b> beserta seluruh pesan &amp;
+                    skor lead-nya akan dihapus permanen dan <b class="text-ink">tidak bisa dikembalikan</b>.
+                </p>
+                <div class="mt-5 flex justify-end gap-2.5">
+                    <button type="button" @click="confirmDelete = false"
+                        class="rounded-[11px] border border-line-2 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-muted hover:border-accent/40">
+                        Batal
+                    </button>
+                    <button type="button" wire:click="deleteConversation" @click="confirmDelete = false; pane = 'list'"
+                        class="rounded-[11px] bg-[#C0562C] px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">
+                        Hapus Percakapan
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- toast --}}
     @if ($toast)
