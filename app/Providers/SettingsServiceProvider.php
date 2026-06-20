@@ -42,12 +42,16 @@ class SettingsServiceProvider extends ServiceProvider
         'META_IG_APP_SECRET' => 'services.meta.ig_app_secret',
         'META_GRAPH_VERSION' => 'services.meta.graph_version',
         'META_MESSENGER_ENABLED' => 'services.meta.messenger_enabled',
+        'META_MESSENGER_COMMENTS_ENABLED' => 'services.meta.messenger_comments_enabled',
         'META_INSTAGRAM_ENABLED' => 'services.meta.instagram_enabled',
         'META_INSTAGRAM_COMMENTS_ENABLED' => 'services.meta.instagram_comments_enabled',
     ];
 
     /** Setting yang harus dicast ke boolean. */
-    private const BOOLS = ['META_MESSENGER_ENABLED', 'META_INSTAGRAM_ENABLED', 'META_INSTAGRAM_COMMENTS_ENABLED'];
+    private const BOOLS = [
+        'META_MESSENGER_ENABLED', 'META_MESSENGER_COMMENTS_ENABLED',
+        'META_INSTAGRAM_ENABLED', 'META_INSTAGRAM_COMMENTS_ENABLED',
+    ];
 
     public function boot(): void
     {

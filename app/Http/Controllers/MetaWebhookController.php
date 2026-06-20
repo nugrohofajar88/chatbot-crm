@@ -89,31 +89,53 @@ class MetaWebhookController extends Controller
      */
     private function handleChange(MetaInboundService $inbound, string $channel, string $businessId, array $change): void
     {
-        if (($change['field'] ?? '') !== 'comments') {
-            return;
-        }
-
-        if (! config('services.meta.instagram_comments_enabled', true)) {
-            return;
-        }
-
+        $field = (string) ($change['field'] ?? '');
         $value = (array) ($change['value'] ?? []);
-        $commentId = trim((string) ($value['id'] ?? ''));
-        $text = trim((string) ($value['text'] ?? ''));
-        $fromId = trim((string) ($value['from']['id'] ?? ''));
-        $username = trim((string) ($value['from']['username'] ?? '')) ?: null;
 
-        // Abaikan: kosong, atau komentar/balasan dari akun bisnis sendiri (cegah loop).
-        if ($commentId === '' || $text === '' || ($businessId !== '' && $fromId === $businessId)) {
+        // ===== Instagram: komentar (field=comments) =====
+        if ($field === 'comments') {
+            if (! config('services.meta.instagram_comments_enabled', true)) {
+                return;
+            }
+
+            $commentId = trim((string) ($value['id'] ?? ''));
+            $text = trim((string) ($value['text'] ?? ''));
+            $fromId = trim((string) ($value['from']['id'] ?? ''));
+            $username = trim((string) ($value['from']['username'] ?? '')) ?: null;
+
+            if ($commentId === '' || $text === '' || ($businessId !== '' && $fromId === $businessId)) {
+                return;
+            }
+            if (! Cache::add('meta:comment:'.$commentId, 1, now()->addMinutes(10))) {
+                return;
+            }
+
+            $inbound->handleComment($channel, $commentId, $text, $username);
+
             return;
         }
 
-        // Dedup (Meta bisa mengirim ulang event komentar yang sama).
-        if (! Cache::add('meta:comment:'.$commentId, 1, now()->addMinutes(10))) {
-            return;
-        }
+        // ===== Facebook: komentar postingan/iklan (field=feed, item=comment, verb=add) =====
+        if ($field === 'feed' && ($value['item'] ?? '') === 'comment' && ($value['verb'] ?? '') === 'add') {
+            if (! config('services.meta.messenger_comments_enabled', true)) {
+                return;
+            }
 
-        $inbound->handleComment($channel, $commentId, $text, $username);
+            $commentId = trim((string) ($value['comment_id'] ?? ''));
+            $text = trim((string) ($value['message'] ?? ''));
+            $fromId = trim((string) ($value['from']['id'] ?? ''));
+            $name = trim((string) ($value['from']['name'] ?? '')) ?: null;
+
+            // Abaikan komentar/balasan dari Page sendiri (cegah loop).
+            if ($commentId === '' || $text === '' || ($businessId !== '' && $fromId === $businessId)) {
+                return;
+            }
+            if (! Cache::add('meta:fbcomment:'.$commentId, 1, now()->addMinutes(10))) {
+                return;
+            }
+
+            $inbound->handleFacebookComment($commentId, $text, $fromId, $name);
+        }
     }
 
     /** Proses satu event messaging: pesan masuk, gema keluar, read & delivery receipt. */

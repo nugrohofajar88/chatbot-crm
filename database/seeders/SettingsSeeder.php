@@ -46,7 +46,8 @@ class SettingsSeeder extends Seeder
             ['META_IG_ACCESS_TOKEN', 'meta', 'Instagram access token (graph.instagram.com, ~60 hari)'],
             ['META_IG_APP_SECRET', 'meta', 'Instagram App Secret (verifikasi signature IG)'],
             ['META_GRAPH_VERSION', 'meta', 'Versi Graph API', 'v21.0'],
-            ['META_MESSENGER_ENABLED', 'meta', 'Aktifkan Messenger (true/false)', 'true'],
+            ['META_MESSENGER_ENABLED', 'meta', 'Aktifkan Messenger DM (true/false)', 'true'],
+            ['META_MESSENGER_COMMENTS_ENABLED', 'meta', 'Auto-reply + private DM ke komentar FB/iklan — PUBLIK (true/false)', 'true'],
             ['META_INSTAGRAM_ENABLED', 'meta', 'Aktifkan Instagram DM (true/false)', 'true'],
             ['META_INSTAGRAM_COMMENTS_ENABLED', 'meta', 'Auto-reply AI ke komentar IG — PUBLIK (true/false)', 'true'],
         ];

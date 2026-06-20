@@ -153,6 +153,52 @@ class MetaInboundService
         }
     }
 
+    /**
+     * Komentar Facebook (postingan/iklan) -> balas publik + private reply (DM) +
+     * rekam lead ke inbox CRM agar bisa di-follow-up seperti percakapan Messenger biasa.
+     */
+    public function handleFacebookComment(string $commentId, string $text, string $psid, ?string $name = null): void
+    {
+        $channel = 'messenger';
+
+        // 1. Balas komentar publik (singkat, ajak ke DM).
+        $public = AiReply::comment($text, $name);
+        if ($public !== '') {
+            $this->meta->replyToComment($commentId, $public, $channel);
+        }
+
+        // 2. Private reply -> buka DM ke pengomentar.
+        $dm = AiReply::commentToDm($text, $name);
+        if ($dm === '') {
+            return;
+        }
+
+        $mid = $this->meta->privateReply($commentId, $dm, $channel);
+        if ($mid === null) {
+            return;
+        }
+
+        // 3. Rekam lead supaya langsung muncul di inbox (komentar asal + DM pembuka).
+        $placeholder = ucfirst($channel).' User';
+        $contact = Contact::firstOrCreate(
+            ['channel' => $channel, 'psid' => $psid],
+            ['name' => $name ?: $placeholder, 'lead_since' => now()],
+        );
+        if ($name && in_array($contact->name, ['', $placeholder], true)) {
+            $contact->update(['name' => $name]);
+        }
+
+        $conv = $contact->conversations()->firstOrCreate(
+            ['channel' => $channel],
+            ['stage' => 'baru', 'temperature' => 'cold', 'score' => 0, 'ai_enabled' => true],
+        );
+
+        $conv->messages()->create(['direction' => 'in', 'sender' => 'lead', 'body' => '💬 [Komentar] '.$text, 'type' => 'text']);
+        $conv->messages()->create(['direction' => 'out', 'sender' => 'ai', 'body' => $dm, 'type' => 'text', 'wa_message_id' => $mid]);
+        $conv->increment('unread');
+        $conv->update(['last_message_at' => now()]);
+    }
+
     private function findConversation(string $channel, string $leadPsid): ?Conversation
     {
         if ($leadPsid === '') {

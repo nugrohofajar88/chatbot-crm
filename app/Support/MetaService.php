@@ -79,7 +79,7 @@ class MetaService
         return $ok ? ($messageId !== '' ? $messageId : 'sent') : null;
     }
 
-    /** Balas komentar (Instagram) via Graph: POST /{comment-id}/replies. */
+    /** Balas komentar publik. Instagram: POST /{id}/replies; Facebook: POST /{id}/comments. */
     public function replyToComment(string $commentId, string $text, string $channel = 'instagram'): ?string
     {
         ['base' => $base, 'token' => $token] = $this->endpoint($channel);
@@ -90,10 +90,12 @@ class MetaService
             return null;
         }
 
+        $sub = $channel === 'instagram' ? 'replies' : 'comments';
+
         try {
             $response = Http::withToken($token)
                 ->timeout(20)
-                ->post("{$base}/{$commentId}/replies", ['message' => $text]);
+                ->post("{$base}/{$commentId}/{$sub}", ['message' => $text]);
         } catch (\Throwable $e) {
             Log::error('meta.comment.exception', ['comment' => $commentId, 'message' => $e->getMessage()]);
 
@@ -104,6 +106,45 @@ class MetaService
         $id = (string) $response->json('id', '');
 
         Log::info('meta.comment.reply', [
+            'comment' => $commentId,
+            'channel' => $channel,
+            'http' => $response->status(),
+            'ok' => $ok,
+            'response' => $response->json() ?? $response->body(),
+        ]);
+
+        return $ok ? ($id !== '' ? $id : 'sent') : null;
+    }
+
+    /**
+     * Private reply: kirim DM ke pengomentar via POST /{comment-id}/private_replies.
+     * Membuka thread Messenger/IG ke orang yang berkomentar (1x per komentar, dalam 7 hari).
+     * Inilah jembatan komentar iklan -> lead.
+     */
+    public function privateReply(string $commentId, string $text, string $channel = 'messenger'): ?string
+    {
+        ['base' => $base, 'token' => $token] = $this->endpoint($channel);
+
+        if ($token === '' || $commentId === '') {
+            Log::error('meta.private_reply.no_token', ['channel' => $channel]);
+
+            return null;
+        }
+
+        try {
+            $response = Http::withToken($token)
+                ->timeout(20)
+                ->post("{$base}/{$commentId}/private_replies", ['message' => $text]);
+        } catch (\Throwable $e) {
+            Log::error('meta.private_reply.exception', ['comment' => $commentId, 'message' => $e->getMessage()]);
+
+            return null;
+        }
+
+        $ok = $response->successful();
+        $id = (string) ($response->json('message_id') ?? $response->json('id') ?? '');
+
+        Log::info('meta.private_reply', [
             'comment' => $commentId,
             'channel' => $channel,
             'http' => $response->status(),

@@ -56,4 +56,25 @@ class AiReply
             return '';
         }
     }
+
+    /** Pesan DM pembuka untuk pengomentar iklan/postingan (private reply). '' bila gagal. */
+    public static function commentToDm(string $commentText, ?string $name = null): string
+    {
+        $sapa = $name ? "menyapa namanya ({$name})" : 'menyapa ramah';
+
+        $prompt = "Seseorang menulis komentar di iklan/postingan kami:\n\"{$commentText}\"\n\n"
+            ."Tulis SATU pesan DM pembuka yang hangat & personal untuk melanjutkan obrolan secara privat: "
+            .$sapa.', berterima kasih atas minatnya, dan tawarkan bantuan sesuai peranmu. '
+            .'Maks 2 kalimat, jangan kaku. Hanya teks pesannya, tanpa label.';
+
+        try {
+            $res = agent(instructions: AiPersona::instructions())->prompt($prompt);
+
+            return trim(preg_replace('/^["\']|["\']$/', '', $res->text));
+        } catch (\Throwable $e) {
+            Log::warning('ai.comment_dm.failed', ['error' => $e->getMessage()]);
+
+            return '';
+        }
+    }
 }
