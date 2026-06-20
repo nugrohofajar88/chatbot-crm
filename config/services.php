@@ -60,6 +60,7 @@ return [
         'verify_token' => env('META_VERIFY_TOKEN'),
         'page_access_token' => env('META_PAGE_ACCESS_TOKEN'),    // Messenger (graph.facebook.com)
         'ig_access_token' => env('META_IG_ACCESS_TOKEN'),        // Instagram Login (graph.instagram.com)
+        'ig_app_secret' => env('META_IG_APP_SECRET'),            // utk verifikasi signature webhook IG
         'graph_version' => env('META_GRAPH_VERSION', 'v21.0'),
     ],
 

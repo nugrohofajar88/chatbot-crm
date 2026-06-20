@@ -125,18 +125,27 @@ class MetaService
      */
     public function verifySignature(?string $signatureHeader, string $rawBody): bool
     {
-        $secret = (string) config('services.meta.app_secret');
+        // Messenger ditandatangani dgn App Secret Facebook; Instagram (Instagram
+        // Login) dgn Instagram App Secret. Coba keduanya — terima bila salah satu cocok.
+        $secrets = array_values(array_filter([
+            (string) config('services.meta.app_secret'),
+            (string) config('services.meta.ig_app_secret'),
+        ]));
 
-        if ($secret === '') {
-            return true;
+        if ($secrets === []) {
+            return true; // mode dev: tidak ada secret yang diset
         }
 
         if (! is_string($signatureHeader) || ! str_starts_with($signatureHeader, 'sha256=')) {
             return false;
         }
 
-        $expected = 'sha256='.hash_hmac('sha256', $rawBody, $secret);
+        foreach ($secrets as $secret) {
+            if (hash_equals('sha256='.hash_hmac('sha256', $rawBody, $secret), $signatureHeader)) {
+                return true;
+            }
+        }
 
-        return hash_equals($expected, $signatureHeader);
+        return false;
     }
 }
