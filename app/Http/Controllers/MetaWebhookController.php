@@ -57,9 +57,16 @@ class MetaWebhookController extends Controller
             default => null,
         };
 
-        // Abaikan channel tak dikenal ATAU yang dimatikan lewat config
-        // (services.meta.messenger_enabled / instagram_enabled).
-        if ($channel === null || ! config("services.meta.{$channel}_enabled", true)) {
+        if ($channel === null) {
+            return response()->json(['status' => 'ignored']);
+        }
+
+        // Gerbang independen: DM (messaging) vs komentar (changes). Drop tanpa log
+        // hanya bila KEDUANYA dimatikan untuk channel ini.
+        $dmEnabled = (bool) config("services.meta.{$channel}_enabled", true);
+        $commentsEnabled = (bool) config("services.meta.{$channel}_comments_enabled", true);
+
+        if (! $dmEnabled && ! $commentsEnabled) {
             return response()->json(['status' => 'ignored']);
         }
 
@@ -141,6 +148,11 @@ class MetaWebhookController extends Controller
     /** Proses satu event messaging: pesan masuk, gema keluar, read & delivery receipt. */
     private function handleEvent(MetaInboundService $inbound, string $channel, array $event): void
     {
+        // DM digerbangi toggle channel (messenger_enabled / instagram_enabled).
+        if (! config("services.meta.{$channel}_enabled", true)) {
+            return;
+        }
+
         // Read receipt: lead membaca pesan kita (sampai watermark).
         if (isset($event['read']['watermark'])) {
             $inbound->markRead($channel, (string) ($event['sender']['id'] ?? ''), (int) $event['read']['watermark']);
