@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col">
+<div x-data="{ tab: 'ai' }" class="flex h-full flex-col">
     <x-page-header title="Konfigurasi" subtitle="Pengaturan teknis (admin/developer) — kunci AI, gateway, & Meta" />
 
     <div class="flex-1 overflow-y-auto p-[26px]">
@@ -13,17 +13,25 @@
                 $inputClass = 'w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent';
             @endphp
 
+            {{-- tab nav --}}
+            <div class="mb-4 flex gap-1 rounded-[13px] border border-line bg-panel-2 p-1">
+                @foreach ($groups as $key => $meta)
+                    <button type="button" @click="tab = '{{ $key }}'"
+                        :class="tab === '{{ $key }}' ? 'bg-white text-ink-strong shadow-[0_2px_8px_rgba(80,55,30,0.08)]' : 'text-ink-muted hover:text-ink'"
+                        class="flex-1 rounded-[10px] px-3 py-2 text-[12.5px] font-semibold transition-colors">
+                        {{ $meta[0] }}
+                    </button>
+                @endforeach
+            </div>
+
             <div class="mb-4 rounded-[14px] border border-accent/20 bg-accent/[0.06] p-4 text-[12.5px] leading-relaxed text-[#6B6253]">
                 Nilai disimpan di database &mdash; perubahan <b class="text-ink">langsung berlaku</b> tanpa redeploy/clear cache.
                 Kolom rahasia hanya menampilkan 4 karakter terakhir; biarkan kosong jika tak ingin mengubahnya.
             </div>
 
             @foreach ($groups as $key => $meta)
-                <div class="mb-4 rounded-[16px] border border-line bg-panel p-6">
-                    <div class="mb-4">
-                        <div class="font-serif text-[19px] font-semibold text-ink-strong">{{ $meta[0] }}</div>
-                        <div class="text-[12.5px] text-ink-muted">{{ $meta[1] }}</div>
-                    </div>
+                <div x-show="tab === '{{ $key }}'" x-cloak class="mb-4 rounded-[16px] border border-line bg-panel p-6">
+                    <div class="mb-4 text-[12.5px] text-ink-muted">{{ $meta[1] }}</div>
 
                     <div class="space-y-3.5">
                         @foreach ($grouped[$key] as $f)
@@ -72,7 +80,7 @@
                         class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110 disabled:opacity-50">
                     Simpan Konfigurasi
                 </button>
-                <span class="text-[12px] text-ink-muted">Berlaku langsung untuk balasan & webhook berikutnya.</span>
+                <span class="text-[12px] text-ink-muted">Menyimpan semua tab sekaligus &middot; langsung berlaku.</span>
             </div>
         </div>
     </div>
