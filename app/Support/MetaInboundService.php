@@ -161,17 +161,8 @@ class MetaInboundService
     {
         $channel = 'messenger';
 
-        // 1. Balas komentar publik — OPSIONAL (default mati). Butuh izin
-        //    pages_manage_engagement. Inti lead-gen tidak memerlukannya.
-        if (config('services.meta.messenger_comment_public_reply', false)) {
-            $public = AiReply::comment($text, $name);
-            if ($public !== '') {
-                $this->meta->replyToComment($commentId, $public, $channel);
-            }
-        }
-
-        // 2. Rekam lead dari komentar SEKARANG (selalu) — walau DM nanti gagal,
-        //    operator tetap melihat lead-nya di inbox & bisa follow-up manual.
+        // 1. Rekam lead + komentar masuk (selalu) — buat thread dulu agar
+        //    balasan publik & DM bisa ikut dicatat ke percakapan yang sama.
         $placeholder = ucfirst($channel).' User';
         $contact = Contact::firstOrCreate(
             ['channel' => $channel, 'psid' => $psid],
@@ -188,8 +179,17 @@ class MetaInboundService
         $conv->messages()->create(['direction' => 'in', 'sender' => 'lead', 'body' => '💬 [Komentar] '.$text, 'type' => 'text']);
         $conv->increment('unread');
 
-        // 3. Private reply -> DM ke pengomentar. Bila sukses, catat DM-nya juga.
-        //    (Gagal itu wajar untuk komentar dari pemilik Page sendiri.)
+        // 2. Balas komentar PUBLIK — opsional (butuh pages_manage_engagement).
+        //    Bila terkirim, catat juga ke thread.
+        if (config('services.meta.messenger_comment_public_reply', false)) {
+            $public = AiReply::comment($text, $name);
+            if ($public !== '' && $this->meta->replyToComment($commentId, $public, $channel) !== null) {
+                $conv->messages()->create(['direction' => 'out', 'sender' => 'ai', 'body' => '↩️ [Balas komentar] '.$public, 'type' => 'text']);
+            }
+        }
+
+        // 3. Private reply -> DM ke pengomentar. Bila sukses, catat DM-nya.
+        //    (Gagal wajar untuk komentar pemilik Page sendiri / user non-tester di dev.)
         $dm = AiReply::commentToDm($text, $name);
         if ($dm !== '') {
             $mid = $this->meta->privateReply($commentId, $dm, $channel);
