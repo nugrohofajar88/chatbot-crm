@@ -18,7 +18,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Aterra Realty CRM' }}</title>
+    <title>{{ $title ?? (($brandName ?? 'Aterra Realty').' CRM') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     <style>[x-cloak]{display:none !important}</style>
@@ -34,10 +34,10 @@
     <aside x-bind:class="sidebar ? 'translate-x-0' : '-translate-x-full'"
            class="fixed inset-y-0 left-0 z-40 flex w-[248px] flex-none flex-col bg-sidebar px-4 py-[22px] text-sidebar-ink transition-transform duration-200 md:static md:translate-x-0">
         <div class="flex items-center gap-3 px-2 pb-[22px] pt-1.5">
-            <div class="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-serif text-[22px] font-bold leading-none text-white">A</div>
+            <div class="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-serif text-[22px] font-bold leading-none text-white">{{ mb_strtoupper(mb_substr($brandShort ?? 'A', 0, 1)) }}</div>
             <div>
-                <div class="font-serif text-[23px] font-bold leading-none text-[#F4EFE7]">Aterra</div>
-                <div class="mt-0.5 text-[10px] uppercase tracking-[2.5px] text-sidebar-muted">Realty CRM</div>
+                <div class="font-serif text-[23px] font-bold leading-none text-[#F4EFE7]">{{ $brandShort ?? 'Aterra' }}</div>
+                <div class="mt-0.5 text-[10px] uppercase tracking-[2.5px] text-sidebar-muted">CRM</div>
             </div>
         </div>
 
@@ -59,7 +59,7 @@
         <div class="mt-6 rounded-[14px] border border-accent/20 bg-accent/[0.14] p-3.5">
             <div class="mb-1.5 flex items-center gap-2">
                 <span class="h-[7px] w-[7px] rounded-full bg-accent shadow-[0_0_0_3px_rgba(176,85,47,0.25)]"></span>
-                <span class="text-[11px] font-semibold uppercase tracking-[1.5px] text-accent-soft">Aterra AI</span>
+                <span class="text-[11px] font-semibold uppercase tracking-[1.5px] text-accent-soft">{{ $brandShort ?? 'Aterra' }} AI</span>
             </div>
             <div class="text-[12.5px] leading-relaxed text-[#B7AD9E]">Asisten aktif menangani <b class="text-[#EBE3D6]">{{ $aiToday }} chat</b> secara otomatis.</div>
         </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Kebijakan Privasi — Aterra Realty</title>
+    <title>Kebijakan Privasi — {{ $brandName ?? 'Aterra Realty' }}</title>
     <style>
         body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.7;
                color: #2c2620; max-width: 760px; margin: 0 auto; padding: 40px 22px; background: #faf7f2; }
@@ -16,10 +16,10 @@
 </head>
 <body>
     <h1>Kebijakan Privasi</h1>
-    <p class="muted">Aterra Realty &middot; Terakhir diperbarui: {{ date('d F Y') }}</p>
+    <p class="muted">{{ $brandName ?? 'Aterra Realty' }} &middot; Terakhir diperbarui: {{ date('d F Y') }}</p>
 
     <p>
-        Kebijakan ini menjelaskan bagaimana <strong>Aterra Realty</strong> ("kami") mengumpulkan dan
+        Kebijakan ini menjelaskan bagaimana <strong>{{ $brandName ?? 'Aterra Realty' }}</strong> ("kami") mengumpulkan dan
         menggunakan data ketika Anda menghubungi kami melalui WhatsApp, Facebook Messenger, atau
         Instagram Direct Message yang terhubung dengan sistem CRM kami.
     </p>

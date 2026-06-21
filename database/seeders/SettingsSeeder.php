@@ -19,6 +19,9 @@ class SettingsSeeder extends Seeder
         // [code, group, description, default?]
         $defs = [
             // ===== AI =====
+            ['BRAND_NAME', 'ai', 'Nama brand/bisnis (dipakai AI & branding UI: judul, header)', 'Aterra Realty'],
+            ['BRAND_SHORT', 'ai', 'Nama pendek brand untuk logo sidebar & label "X AI"', 'Aterra'],
+            ['BRAND_DESC', 'ai', 'Deskripsi bisnis untuk AI (mis. "agen properti premium di Indonesia", "toko fashion online")', 'agen properti premium di Indonesia'],
             ['AI_DEFAULT_PROVIDER', 'ai', 'Provider AI aktif: gemini | openai | openrouter', 'gemini'],
             ['GEMINI_API_KEY', 'ai', 'API key Google Gemini'],
             ['GEMINI_MODEL', 'ai', 'Model teks Gemini', 'gemini-3.1-flash-lite'],

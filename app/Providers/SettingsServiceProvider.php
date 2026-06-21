@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -74,5 +75,11 @@ class SettingsServiceProvider extends ServiceProvider
                 ? filter_var($value, FILTER_VALIDATE_BOOL)
                 : $value]);
         }
+
+        // Branding UI tersedia di semua view (judul, logo, label "X AI").
+        $brandName = ($values['BRAND_NAME'] ?? '') !== '' ? $values['BRAND_NAME'] : 'Aterra Realty';
+        $brandShort = ($values['BRAND_SHORT'] ?? '') !== '' ? $values['BRAND_SHORT'] : 'Aterra';
+        View::share('brandName', $brandName);
+        View::share('brandShort', $brandShort);
     }
 }

@@ -118,7 +118,7 @@
                             @if ($isAi)
                                 <div class="mb-1 flex items-center gap-1.5">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="#B0552F"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z"/></svg>
-                                    <span class="text-[11px] font-semibold text-accent">Aterra AI</span>
+                                    <span class="text-[11px] font-semibold text-accent">{{ $brandShort ?? 'Aterra' }} AI</span>
                                 </div>
                             @endif
                             <div class="px-[15px] py-[11px] text-[13.5px] leading-relaxed

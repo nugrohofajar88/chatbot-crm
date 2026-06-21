@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\Conversation;
 use App\Models\LeadScore;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 
 use function Laravel\Ai\agent;
@@ -27,8 +28,11 @@ class LeadScoringService
             ->map(fn ($m) => ($m->sender === 'lead' ? 'Calon pembeli' : 'Agen').': '.$m->body)
             ->implode("\n");
 
-        $instructions = <<<'TXT'
-Anda analis lead untuk agen properti premium Aterra Realty di Indonesia.
+        $brand = trim((string) Setting::get('BRAND_NAME', 'Aterra Realty')) ?: 'Aterra Realty';
+        $desc = trim((string) Setting::get('BRAND_DESC', 'agen properti premium di Indonesia')) ?: 'agen properti premium di Indonesia';
+
+        $instructions = <<<TXT
+Anda analis lead untuk {$brand}, {$desc}.
 Nilai SATU lead berdasarkan percakapan, skala 0-100 per dimensi:
 - budget: kejelasan & realisme niat anggaran (sebut angka jelas = tinggi; tanpa info = rendah).
 - engagement: keaktifan & kedalaman minat (banyak pertanyaan, respons cepat, detail = tinggi).
