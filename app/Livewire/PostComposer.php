@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Livewire;
+
+use App\Models\Post;
+use App\Support\ContentPublisher;
+use App\Support\PostWriter;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+/**
+ * Komposer postingan AI untuk Facebook Page & Instagram.
+ * Modul TERPISAH dari inbox/chat: prompt -> caption AI -> (gambar) -> publish.
+ */
+#[Layout('components.layouts.app')]
+class PostComposer extends Component
+{
+    use WithFileUploads;
+
+    public string $prompt = '';
+
+    public string $caption = '';
+
+    public $image = null;
+
+    /** @var array<int,string> */
+    public array $platforms = ['facebook'];
+
+    public string $busy = '';   // '', 'generate', 'publish'
+
+    public string $toast = '';
+
+    /** Buat caption dari prompt via AI (PostWriter, bukan persona chat). */
+    public function generate(): void
+    {
+        if (trim($this->prompt) === '') {
+            return;
+        }
+
+        $this->busy = 'generate';
+        $this->caption = PostWriter::generate($this->prompt);
+        $this->busy = '';
+
+        $this->toast = $this->caption !== '' ? 'Caption dibuat — silakan edit bila perlu' : 'AI sedang sibuk, coba lagi';
+    }
+
+    public function publish(ContentPublisher $publisher): void
+    {
+        $caption = trim($this->caption);
+
+        if ($caption === '' || $this->platforms === []) {
+            $this->toast = 'Caption & minimal satu platform wajib diisi';
+
+            return;
+        }
+
+        // Gambar (opsional untuk FB, WAJIB untuk IG).
+        $imagePath = null;
+        $imageUrl = null;
+        if ($this->image) {
+            $this->validate(['image' => 'image|max:10240']);
+            $imagePath = $this->image->store('posts', 'public_uploads');
+            $imageUrl = url('uploads/'.$imagePath);
+        }
+
+        if (in_array('instagram', $this->platforms, true) && ! $imageUrl) {
+            $this->toast = 'Instagram wajib menyertakan gambar';
+
+            return;
+        }
+
+        $this->busy = 'publish';
+
+        $result = [];
+        if (in_array('facebook', $this->platforms, true)) {
+            $result['facebook'] = $publisher->publishFacebook($caption, $imageUrl);
+        }
+        if (in_array('instagram', $this->platforms, true)) {
+            $result['instagram'] = $publisher->publishInstagram($caption, $imageUrl);
+        }
+
+        $this->busy = '';
+
+        $oks = collect($result)->filter(fn ($r) => $r['ok'] ?? false)->count();
+        $status = $oks === count($result) ? 'published' : ($oks > 0 ? 'partial' : 'failed');
+
+        Post::create([
+            'prompt' => $this->prompt,
+            'caption' => $caption,
+            'image_path' => $imagePath,
+            'platforms' => array_values($this->platforms),
+            'status' => $status,
+            'fb_post_id' => $result['facebook']['id'] ?? null,
+            'ig_post_id' => $result['instagram']['id'] ?? null,
+            'result' => $result,
+        ]);
+
+        unset($this->recent);
+        $this->reset(['prompt', 'caption', 'image']);
+        $this->platforms = ['facebook'];
+
+        $this->toast = match ($status) {
+            'published' => 'Berhasil diposting 🎉',
+            'partial' => 'Sebagian terposting — cek riwayat di bawah',
+            default => 'Gagal posting — cek detail di riwayat',
+        };
+    }
+
+    #[Computed]
+    public function recent()
+    {
+        return Post::latest()->limit(8)->get();
+    }
+
+    public function render()
+    {
+        return view('livewire.post-composer');
+    }
+}

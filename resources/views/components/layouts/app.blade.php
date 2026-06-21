@@ -3,6 +3,7 @@
     $navItems = [
         ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid'],
         ['route' => 'inbox',     'label' => 'Kotak Masuk', 'icon' => 'chat'],
+        ['route' => 'compose',   'label' => 'Buat Postingan', 'icon' => 'megaphone'],
         ['route' => 'pipeline',  'label' => 'Pipeline', 'icon' => 'bars'],
         ['route' => 'listings',  'label' => 'Listing Properti', 'icon' => 'home'],
         ['route' => 'contacts',  'label' => 'Profil Kontak', 'icon' => 'user'],
