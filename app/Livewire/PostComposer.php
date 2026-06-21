@@ -31,6 +31,9 @@ class PostComposer extends Component
     /** Path relatif gambar hasil AI (di public/uploads). */
     public ?string $generatedImagePath = null;
 
+    /** Pesan error generate gambar (ditampilkan di bawah prompt). */
+    public string $imageError = '';
+
     /** @var array<int,string> */
     public array $platforms = ['facebook'];
 
@@ -55,20 +58,22 @@ class PostComposer extends Component
     /** Generate gambar via AI (provider/model diatur di /configuration). */
     public function generateImage(): void
     {
+        $this->imageError = '';
+
         if (trim($this->imagePrompt) === '') {
             return;
         }
 
         $this->busy = 'image';
-        $path = ImageGenerator::generate($this->imagePrompt);
+        $result = ImageGenerator::generate($this->imagePrompt);
         $this->busy = '';
 
-        if ($path) {
-            $this->generatedImagePath = $path;
+        if ($result['ok']) {
+            $this->generatedImagePath = (string) $result['path'];
             $this->image = null;   // pakai gambar AI, kosongkan upload manual
             $this->toast = 'Gambar AI dibuat';
         } else {
-            $this->toast = 'Gagal generate gambar — cek provider/model image di /configuration';
+            $this->imageError = $result['error'] ?? 'Gagal generate gambar — cek provider/model di /configuration';
         }
     }
 
@@ -127,7 +132,7 @@ class PostComposer extends Component
         ]);
 
         unset($this->recent);
-        $this->reset(['prompt', 'caption', 'image', 'imagePrompt', 'generatedImagePath']);
+        $this->reset(['prompt', 'caption', 'image', 'imagePrompt', 'generatedImagePath', 'imageError']);
         $this->platforms = ['facebook'];
 
         $this->toast = match ($status) {

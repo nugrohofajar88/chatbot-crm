@@ -38,6 +38,13 @@
                     </button>
                 </div>
 
+                @if ($imageError)
+                    <div class="mt-2 flex items-start gap-2 rounded-[10px] border border-[#E4B8A6] bg-[#FBEDE6] px-3 py-2 text-[12px] leading-snug text-[#A23C18]">
+                        <svg class="mt-0.5 flex-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span class="min-w-0 break-words">{{ $imageError }}</span>
+                    </div>
+                @endif
+
                 {{-- Preview (AI / manual) + upload manual --}}
                 <div class="mt-2.5 flex items-center gap-3">
                     @if ($generatedImagePath)
