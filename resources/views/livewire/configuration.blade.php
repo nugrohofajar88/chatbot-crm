@@ -34,8 +34,20 @@
                     <div class="mb-4 text-[12.5px] text-ink-muted">{{ $meta[1] }}</div>
 
                     <div class="space-y-3.5">
+                        @php $currentSection = null; $sectionIdx = 0; @endphp
                         @foreach ($grouped[$key] as $f)
                             @php $code = $f['code']; @endphp
+
+                            @if (($f['section'] ?? null) && ($f['section'] !== $currentSection))
+                                @php $currentSection = $f['section']; $sectionIdx++; @endphp
+                                <div class="{{ $sectionIdx > 1 ? 'border-t border-line pt-4' : '' }}">
+                                    <div class="text-[12px] font-semibold uppercase tracking-[0.05em] text-accent">{{ $currentSection }}</div>
+                                    @if (! empty($f['section_desc']))
+                                        <div class="mt-0.5 text-[11.5px] leading-snug text-ink-muted">{{ $f['section_desc'] }}</div>
+                                    @endif
+                                </div>
+                            @endif
+
                             <div>
                                 <label class="mb-1 flex items-baseline gap-2">
                                     <span class="text-[13px] font-medium text-ink">{{ $f['label'] }}</span>

@@ -27,26 +27,30 @@ class Configuration extends Component
 
     /** type: text | select | bool | secret */
     public const FIELDS = [
-        // ===== AI =====
-        ['code' => 'AI_DEFAULT_PROVIDER', 'label' => 'Provider AI default', 'group' => 'ai', 'type' => 'select', 'options' => ['gemini' => 'Gemini', 'openai' => 'OpenAI', 'openrouter' => 'OpenRouter']],
-        ['code' => 'GEMINI_API_KEY', 'label' => 'Gemini API Key', 'group' => 'ai', 'type' => 'secret'],
-        ['code' => 'GEMINI_MODEL', 'label' => 'Gemini Model', 'group' => 'ai', 'type' => 'text'],
-        ['code' => 'OPENAI_API_KEY', 'label' => 'OpenAI API Key', 'group' => 'ai', 'type' => 'secret'],
-        ['code' => 'OPENAI_MODEL', 'label' => 'OpenAI Model', 'group' => 'ai', 'type' => 'text'],
-        ['code' => 'OPENROUTER_API_KEY', 'label' => 'OpenRouter API Key', 'group' => 'ai', 'type' => 'secret'],
-        ['code' => 'OPENROUTER_MODEL', 'label' => 'OpenRouter Model (vendor/model)', 'group' => 'ai', 'type' => 'text'],
-        ['code' => 'IMAGE_PROVIDER', 'label' => 'Provider Gambar AI', 'group' => 'ai', 'type' => 'select', 'options' => ['gemini' => 'Gemini', 'openrouter' => 'OpenRouter', 'openai' => 'OpenAI']],
-        ['code' => 'IMAGE_MODEL', 'label' => 'Model Gambar (kosong = default provider)', 'group' => 'ai', 'type' => 'text'],
-        ['code' => 'IMAGE_ASPECT', 'label' => 'Rasio Gambar', 'group' => 'ai', 'type' => 'select', 'options' => ['square' => 'Square (1:1)', 'portrait' => 'Portrait', 'landscape' => 'Landscape']],
+        // ===== AI: Teks (chat & caption) =====
+        ['code' => 'AI_DEFAULT_PROVIDER', 'label' => 'Provider AI default', 'group' => 'ai', 'type' => 'select', 'section' => 'Teks — Chat & Caption', 'section_desc' => 'Provider & model untuk balasan chat dan caption postingan.', 'options' => ['gemini' => 'Gemini', 'openai' => 'OpenAI', 'openrouter' => 'OpenRouter']],
+        ['code' => 'GEMINI_API_KEY', 'label' => 'Gemini API Key', 'group' => 'ai', 'type' => 'secret', 'section' => 'Teks — Chat & Caption'],
+        ['code' => 'GEMINI_MODEL', 'label' => 'Gemini Model', 'group' => 'ai', 'type' => 'text', 'section' => 'Teks — Chat & Caption'],
+        ['code' => 'OPENAI_API_KEY', 'label' => 'OpenAI API Key', 'group' => 'ai', 'type' => 'secret', 'section' => 'Teks — Chat & Caption'],
+        ['code' => 'OPENAI_MODEL', 'label' => 'OpenAI Model', 'group' => 'ai', 'type' => 'text', 'section' => 'Teks — Chat & Caption'],
+        ['code' => 'OPENROUTER_API_KEY', 'label' => 'OpenRouter API Key', 'group' => 'ai', 'type' => 'secret', 'section' => 'Teks — Chat & Caption'],
+        ['code' => 'OPENROUTER_MODEL', 'label' => 'OpenRouter Model (vendor/model)', 'group' => 'ai', 'type' => 'text', 'section' => 'Teks — Chat & Caption'],
+
+        // ===== AI: Gambar (post composer) =====
+        ['code' => 'IMAGE_PROVIDER', 'label' => 'Provider Gambar AI', 'group' => 'ai', 'type' => 'select', 'section' => 'Gambar — Post Composer', 'section_desc' => 'Khusus generate gambar di /compose — boleh beda dari provider teks.', 'options' => ['gemini' => 'Gemini', 'openrouter' => 'OpenRouter', 'openai' => 'OpenAI']],
+        ['code' => 'IMAGE_MODEL', 'label' => 'Model Gambar (kosong = default provider)', 'group' => 'ai', 'type' => 'text', 'section' => 'Gambar — Post Composer'],
+        ['code' => 'IMAGE_ASPECT', 'label' => 'Rasio Gambar', 'group' => 'ai', 'type' => 'select', 'section' => 'Gambar — Post Composer', 'options' => ['square' => 'Square (1:1)', 'portrait' => 'Portrait', 'landscape' => 'Landscape']],
 
         // ===== WhatsApp =====
-        ['code' => 'WHATSAPP_DRIVER', 'label' => 'Driver WhatsApp', 'group' => 'whatsapp', 'type' => 'select', 'options' => ['fonnte' => 'Fonnte', 'wablas' => 'Wablas']],
-        ['code' => 'FONNTE_TOKEN', 'label' => 'Fonnte Token', 'group' => 'whatsapp', 'type' => 'secret'],
-        ['code' => 'FONNTE_WEBHOOK_SECRET', 'label' => 'Fonnte Webhook Secret', 'group' => 'whatsapp', 'type' => 'secret'],
-        ['code' => 'WABLAS_BASE_URL', 'label' => 'Wablas Base URL', 'group' => 'whatsapp', 'type' => 'text'],
-        ['code' => 'WABLAS_TOKEN', 'label' => 'Wablas Token', 'group' => 'whatsapp', 'type' => 'secret'],
-        ['code' => 'WABLAS_SECRET_KEY', 'label' => 'Wablas Secret Key', 'group' => 'whatsapp', 'type' => 'secret'],
-        ['code' => 'WABLAS_WEBHOOK_SECRET', 'label' => 'Wablas Webhook Secret', 'group' => 'whatsapp', 'type' => 'secret'],
+        ['code' => 'WHATSAPP_DRIVER', 'label' => 'Driver WhatsApp', 'group' => 'whatsapp', 'type' => 'select', 'section' => 'Driver Aktif', 'section_desc' => 'Gateway yang dipakai untuk kirim & terima WhatsApp. Isi kredensial sesuai pilihan di bawah.', 'options' => ['fonnte' => 'Fonnte', 'wablas' => 'Wablas']],
+
+        ['code' => 'FONNTE_TOKEN', 'label' => 'Fonnte Token', 'group' => 'whatsapp', 'type' => 'secret', 'section' => 'Fonnte'],
+        ['code' => 'FONNTE_WEBHOOK_SECRET', 'label' => 'Fonnte Webhook Secret', 'group' => 'whatsapp', 'type' => 'secret', 'section' => 'Fonnte'],
+
+        ['code' => 'WABLAS_BASE_URL', 'label' => 'Wablas Base URL', 'group' => 'whatsapp', 'type' => 'text', 'section' => 'Wablas'],
+        ['code' => 'WABLAS_TOKEN', 'label' => 'Wablas Token', 'group' => 'whatsapp', 'type' => 'secret', 'section' => 'Wablas'],
+        ['code' => 'WABLAS_SECRET_KEY', 'label' => 'Wablas Secret Key', 'group' => 'whatsapp', 'type' => 'secret', 'section' => 'Wablas'],
+        ['code' => 'WABLAS_WEBHOOK_SECRET', 'label' => 'Wablas Webhook Secret', 'group' => 'whatsapp', 'type' => 'secret', 'section' => 'Wablas'],
 
         // ===== Meta =====
         ['code' => 'META_APP_ID', 'label' => 'Meta App ID', 'group' => 'meta', 'type' => 'text'],
