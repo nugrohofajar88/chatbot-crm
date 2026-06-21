@@ -81,6 +81,26 @@ class ContentPublisher
                 return ['ok' => false, 'error' => $container->json('error.message') ?? $container->body()];
             }
 
+            // 1b. Tunggu IG selesai memproses gambar (status_code FINISHED) sebelum publish.
+            $ready = false;
+            for ($i = 0; $i < 8; $i++) {
+                $status = Http::withToken($token)->timeout(15)->get("{$base}/{$creationId}", ['fields' => 'status_code']);
+                $code = (string) $status->json('status_code', '');
+                if ($code === 'FINISHED') {
+                    $ready = true;
+                    break;
+                }
+                if ($code === 'ERROR') {
+                    Log::warning('post.instagram.container_error', ['response' => $status->json() ?? $status->body()]);
+
+                    return ['ok' => false, 'error' => 'Gambar gagal diproses Instagram'];
+                }
+                sleep(2);
+            }
+            if (! $ready) {
+                return ['ok' => false, 'error' => 'Gambar belum siap diproses Instagram — coba publish lagi'];
+            }
+
             // 2. Publish container.
             $publish = Http::withToken($token)->timeout(30)
                 ->post("{$base}/{$igId}/media_publish", ['creation_id' => $creationId]);

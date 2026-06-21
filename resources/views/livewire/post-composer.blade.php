@@ -1,4 +1,4 @@
-<div class="flex h-full flex-col">
+<div x-data="{ confirmPublish: false }" class="flex h-full flex-col">
     <x-page-header title="Buat Postingan" subtitle="AI bantu tulis caption → publish ke Facebook & Instagram" />
 
     <div class="flex-1 overflow-y-auto p-[26px]">
@@ -44,19 +44,18 @@
                 <label class="mb-2 mt-4 block text-[13px] font-medium text-ink">Posting ke</label>
                 <div class="flex flex-wrap gap-2.5">
                     <label class="flex cursor-pointer items-center gap-2 rounded-[10px] border border-line-2 bg-white px-3.5 py-2 text-[13px]">
-                        <input type="checkbox" wire:model="platforms" value="facebook" class="h-[16px] w-[16px] rounded text-accent focus:ring-accent">
+                        <input type="checkbox" wire:model.live="platforms" value="facebook" class="h-[16px] w-[16px] rounded text-accent focus:ring-accent">
                         Facebook Page
                     </label>
                     <label class="flex cursor-pointer items-center gap-2 rounded-[10px] border border-line-2 bg-white px-3.5 py-2 text-[13px]">
-                        <input type="checkbox" wire:model="platforms" value="instagram" class="h-[16px] w-[16px] rounded text-accent focus:ring-accent">
+                        <input type="checkbox" wire:model.live="platforms" value="instagram" class="h-[16px] w-[16px] rounded text-accent focus:ring-accent">
                         Instagram
                     </label>
                 </div>
 
                 {{-- Publish --}}
                 <div class="mt-5 flex items-center gap-3">
-                    <button wire:click="publish" wire:loading.attr="disabled" wire:target="publish"
-                        wire:confirm="Publikасikan postingan ini sekarang ke platform terpilih?"
+                    <button type="button" x-on:click="confirmPublish = true" wire:loading.attr="disabled" wire:target="publish"
                         class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110 disabled:opacity-50">
                         <span wire:loading.remove wire:target="publish">Publish Sekarang</span>
                         <span wire:loading wire:target="publish">Mempublikasikan…</span>
@@ -94,6 +93,40 @@
                 @endforelse
             </div>
 
+        </div>
+    </div>
+
+    {{-- modal konfirmasi publish --}}
+    <div x-cloak x-show="confirmPublish" @keydown.escape.window="confirmPublish = false"
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <div x-show="confirmPublish" x-transition.opacity @click="confirmPublish = false"
+             class="absolute inset-0 bg-[#2A241E]/45 backdrop-blur-[2px]"></div>
+        <div x-show="confirmPublish"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="relative w-full max-w-[400px] rounded-[18px] border border-line bg-panel p-6 shadow-[0_20px_50px_rgba(60,40,20,0.28)]">
+            <div class="mb-3.5 flex h-11 w-11 items-center justify-center rounded-[12px]" style="background:rgba(176,85,47,0.12);color:#B0552F">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            </div>
+            <h3 class="font-serif text-[19px] font-semibold text-ink-strong">Publikasikan postingan?</h3>
+            <p class="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
+                Postingan akan <b class="text-ink">langsung tampil publik</b> di:
+                <b class="text-ink">{{ collect($platforms)->map(fn ($p) => ucfirst($p))->implode(', ') ?: '— belum dipilih' }}</b>.
+            </p>
+            <div class="mt-5 flex justify-end gap-2.5">
+                <button type="button" @click="confirmPublish = false"
+                    class="rounded-[11px] border border-line-2 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-muted hover:border-accent/40">
+                    Batal
+                </button>
+                <button type="button" wire:click="publish" @click="confirmPublish = false"
+                    class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">
+                    Ya, Publish
+                </button>
+            </div>
         </div>
     </div>
 
