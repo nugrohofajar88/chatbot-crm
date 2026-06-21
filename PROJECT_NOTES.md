@@ -13,15 +13,10 @@ Status & catatan operasional per 2026-06-21. Pendamping [DEPLOYMENT.md](DEPLOYME
 - **Pause global AI** — toggle "AI Aktif / Dijeda" di header inbox (mematikan semua auto-reply; pesan tetap tercatat).
 - **Auto-refresh token IG** — command `meta:refresh-ig-token` (cron harian 03:00).
 - **Receipts** delivered/read untuk WA (Wablas tracking) & Meta.
-- **AI Post Composer** (`/compose`, menu "Buat Postingan") — TERPISAH dari chat: prompt → AI caption (`PostWriter`) → upload gambar → publish ke FB Page & IG (`ContentPublisher`), riwayat di tabel `posts`. FB pakai `pages_manage_posts` (sudah ada). **IG butuh izin `instagram_business_content_publish`** (BELUM ada — tambahkan & regenerate token IG) + gambar wajib + URL publik.
+- **AI Post Composer** (`/compose`, menu "Buat Postingan") — TERPISAH dari chat: prompt → AI caption (`PostWriter`) → upload gambar → publish ke FB Page & IG (`ContentPublisher`), riwayat di tabel `posts`, konfirmasi via modal. **FB + IG posting JALAN.** FB: `POST /me/feed` atau `/me/photos` (page token). IG: pakai **page token** (graph.facebook.com/{ig-id}/media → media_publish), izin `instagram_content_publish` + `instagram_basic`, **wajib gambar**, dan **poll status_code FINISHED** dulu sebelum publish (kalau langsung publish → error 9007 "media belum siap").
 
 ## ⏳ TODO (prioritas)
-1. **Page token FB → PERMANEN.** Token sekarang dari Graph API Explorer = **short-lived (~1-2 jam)** → DM/komentar FB berhenti saat token mati. **Solusi siap pakai (command sudah dibuat):**
-   1. Isi `META_APP_ID` = `27377340705227630` di /configuration (kalau masih kosong).
-   2. Ambil **User token** baru di Graph API Explorer (izin: pages_messaging, pages_read_engagement, pages_manage_metadata, pages_manage_engagement, pages_read_user_content) — tinggal klik Generate, biarkan User token.
-   3. Jalankan: `php artisan meta:setup-page-token "USER_TOKEN" --page=1066085583255460`
-   4. Command menukar ke long-lived → ambil Page token PERMANEN → simpan ke settings. Output `expires_at: 0` = sukses permanen.
-   - Alternatif jangka panjang: **System User token** (butuh Business terverifikasi; tombol sempat abu-abu).
+1. ✅ **SELESAI — Page token FB PERMANEN.** Dibuat via `php artisan meta:setup-page-token "USER_TOKEN" --page=1066085583255460` (output `expires_at: 0`). Token ini permanen & lengkap: FB DM/komentar/posting + IG posting. **Cara ulang bila perlu** (mis. tambah izin): tambah izin di Graph API Explorer → ambil **USER token** (kolom "Token Akses", bukan dari JSON) → jalankan command → otomatis tersimpan ke settings (tak perlu update /configuration manual).
 2. **App Review + Business Verification** — untuk DM/komentar ke **publik** (advanced access). Sekarang Standard Access = terbatas tester. Untuk produk melayani Page klien → perlu jadi "Tech Provider".
 3. **Auth/login untuk /configuration** — halaman ini menyimpan secret tapi **masih terbuka tanpa login**. Lindungi sebelum dipakai serius.
 4. (Opsional) `META_APP_SECRET` & lainnya: aman; IG token kedaluwarsa ~60 hari (auto-refresh sudah ada bila cron jalan & IG aktif).

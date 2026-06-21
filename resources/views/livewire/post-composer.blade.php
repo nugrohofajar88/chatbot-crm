@@ -26,18 +26,32 @@
                 {{-- Gambar --}}
                 <label class="mb-1.5 mt-4 block text-[13px] font-medium text-ink">Gambar
                     <span class="text-[11px] text-ink-muted">(opsional untuk Facebook, wajib untuk Instagram)</span></label>
-                <div class="flex items-center gap-3">
-                    @if ($image)
+
+                {{-- Generate gambar via AI --}}
+                <div class="flex gap-2">
+                    <input type="text" wire:model="imagePrompt" placeholder="Prompt gambar AI, mis. villa modern tepi sawah saat senja"
+                        class="flex-1 rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13px] text-ink outline-none focus:border-accent">
+                    <button wire:click="generateImage" wire:loading.attr="disabled" wire:target="generateImage"
+                        class="flex-none rounded-[11px] border border-accent/30 bg-accent/[0.08] px-3.5 text-[12.5px] font-semibold text-accent hover:bg-accent/15 disabled:opacity-50">
+                        <span wire:loading.remove wire:target="generateImage">🎨 Generate</span>
+                        <span wire:loading wire:target="generateImage">Membuat…</span>
+                    </button>
+                </div>
+
+                {{-- Preview (AI / manual) + upload manual --}}
+                <div class="mt-2.5 flex items-center gap-3">
+                    @if ($generatedImagePath)
+                        <img src="{{ url('uploads/'.$generatedImagePath) }}" class="h-16 w-16 flex-none rounded-[10px] object-cover" alt="gambar AI">
+                        <button wire:click="$set('generatedImagePath', null)" class="text-[12px] text-ink-muted hover:text-accent">Hapus gambar AI</button>
+                    @elseif ($image)
                         <img src="{{ $image->temporaryUrl() }}" class="h-16 w-16 flex-none rounded-[10px] object-cover" alt="preview">
+                        <button wire:click="$set('image', null)" class="text-[12px] text-ink-muted hover:text-accent">Hapus</button>
                     @endif
                     <label class="cursor-pointer rounded-[10px] border border-line-2 bg-white px-3.5 py-2 text-[12.5px] font-medium text-ink-muted hover:border-accent/40"
                            wire:loading.class="opacity-50" wire:target="image">
-                        {{ $image ? 'Ganti gambar' : 'Pilih gambar' }}
+                        {{ ($image || $generatedImagePath) ? 'atau upload manual' : 'Upload manual' }}
                         <input type="file" wire:model="image" class="hidden" accept=".jpg,.jpeg,.png,.webp">
                     </label>
-                    @if ($image)
-                        <button wire:click="$set('image', null)" class="text-[12px] text-ink-muted hover:text-accent">Hapus</button>
-                    @endif
                 </div>
 
                 {{-- Platform --}}

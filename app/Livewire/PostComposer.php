@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Post;
 use App\Support\ContentPublisher;
+use App\Support\ImageGenerator;
 use App\Support\PostWriter;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -25,10 +26,15 @@ class PostComposer extends Component
 
     public $image = null;
 
+    public string $imagePrompt = '';
+
+    /** Path relatif gambar hasil AI (di public/uploads). */
+    public ?string $generatedImagePath = null;
+
     /** @var array<int,string> */
     public array $platforms = ['facebook'];
 
-    public string $busy = '';   // '', 'generate', 'publish'
+    public string $busy = '';   // '', 'generate', 'image', 'publish'
 
     public string $toast = '';
 
@@ -44,6 +50,26 @@ class PostComposer extends Component
         $this->busy = '';
 
         $this->toast = $this->caption !== '' ? 'Caption dibuat — silakan edit bila perlu' : 'AI sedang sibuk, coba lagi';
+    }
+
+    /** Generate gambar via AI (provider/model diatur di /configuration). */
+    public function generateImage(): void
+    {
+        if (trim($this->imagePrompt) === '') {
+            return;
+        }
+
+        $this->busy = 'image';
+        $path = ImageGenerator::generate($this->imagePrompt);
+        $this->busy = '';
+
+        if ($path) {
+            $this->generatedImagePath = $path;
+            $this->image = null;   // pakai gambar AI, kosongkan upload manual
+            $this->toast = 'Gambar AI dibuat';
+        } else {
+            $this->toast = 'Gagal generate gambar — cek provider/model image di /configuration';
+        }
     }
 
     public function publish(ContentPublisher $publisher): void
@@ -62,6 +88,9 @@ class PostComposer extends Component
         if ($this->image) {
             $this->validate(['image' => 'image|max:10240']);
             $imagePath = $this->image->store('posts', 'public_uploads');
+            $imageUrl = url('uploads/'.$imagePath);
+        } elseif ($this->generatedImagePath) {
+            $imagePath = $this->generatedImagePath;
             $imageUrl = url('uploads/'.$imagePath);
         }
 
@@ -98,7 +127,7 @@ class PostComposer extends Component
         ]);
 
         unset($this->recent);
-        $this->reset(['prompt', 'caption', 'image']);
+        $this->reset(['prompt', 'caption', 'image', 'imagePrompt', 'generatedImagePath']);
         $this->platforms = ['facebook'];
 
         $this->toast = match ($status) {

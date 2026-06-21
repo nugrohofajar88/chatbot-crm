@@ -29,6 +29,9 @@ class SettingsSeeder extends Seeder
             ['ai_persona', 'ai', 'Instruksi/persona sistem AI (kosong = pakai default bawaan)'],
             ['scoring_interval', 'ai', 'Auto-scoring tiap N pesan lead (0 = manual)', '3'],
             ['ai_paused', 'ai', 'Jeda global auto-reply AI (true = AI berhenti membalas otomatis, semua channel)', 'false'],
+            ['IMAGE_PROVIDER', 'ai', 'Provider gambar AI: gemini | openrouter | openai', 'gemini'],
+            ['IMAGE_MODEL', 'ai', 'Model gambar (kosong = default provider; mis. Gemini image / Nano Banana)'],
+            ['IMAGE_ASPECT', 'ai', 'Rasio gambar: square | portrait | landscape', 'square'],
 
             // ===== WhatsApp =====
             ['WHATSAPP_DRIVER', 'whatsapp', 'Driver WhatsApp aktif: fonnte | wablas', 'fonnte'],

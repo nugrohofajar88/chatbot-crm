@@ -35,6 +35,9 @@ class Configuration extends Component
         ['code' => 'OPENAI_MODEL', 'label' => 'OpenAI Model', 'group' => 'ai', 'type' => 'text'],
         ['code' => 'OPENROUTER_API_KEY', 'label' => 'OpenRouter API Key', 'group' => 'ai', 'type' => 'secret'],
         ['code' => 'OPENROUTER_MODEL', 'label' => 'OpenRouter Model (vendor/model)', 'group' => 'ai', 'type' => 'text'],
+        ['code' => 'IMAGE_PROVIDER', 'label' => 'Provider Gambar AI', 'group' => 'ai', 'type' => 'select', 'options' => ['gemini' => 'Gemini', 'openrouter' => 'OpenRouter', 'openai' => 'OpenAI']],
+        ['code' => 'IMAGE_MODEL', 'label' => 'Model Gambar (kosong = default provider)', 'group' => 'ai', 'type' => 'text'],
+        ['code' => 'IMAGE_ASPECT', 'label' => 'Rasio Gambar', 'group' => 'ai', 'type' => 'select', 'options' => ['square' => 'Square (1:1)', 'portrait' => 'Portrait', 'landscape' => 'Landscape']],
 
         // ===== WhatsApp =====
         ['code' => 'WHATSAPP_DRIVER', 'label' => 'Driver WhatsApp', 'group' => 'whatsapp', 'type' => 'select', 'options' => ['fonnte' => 'Fonnte', 'wablas' => 'Wablas']],
