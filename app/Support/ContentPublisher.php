@@ -48,20 +48,31 @@ class ContentPublisher
 
     public function publishInstagram(string $caption, ?string $imageUrl): array
     {
-        $token = (string) config('services.meta.ig_access_token');
+        // Pakai PAGE token (graph.facebook.com) — butuh izin instagram_content_publish
+        // + instagram_basic, dan IG harus terhubung ke Page (instagram_business_account).
+        $token = (string) config('services.meta.page_access_token');
         if ($token === '') {
-            return ['ok' => false, 'error' => 'Instagram Access Token kosong'];
+            return ['ok' => false, 'error' => 'Page Access Token kosong'];
         }
         if (! $imageUrl) {
             return ['ok' => false, 'error' => 'Instagram wajib menyertakan gambar'];
         }
 
-        $base = "https://graph.instagram.com/{$this->version()}";
+        $base = "https://graph.facebook.com/{$this->version()}";
+
+        // 0. IG business account id yang terhubung ke Page.
+        $me = Http::withToken($token)->timeout(20)->get("{$base}/me", ['fields' => 'instagram_business_account']);
+        $igId = (string) ($me->json('instagram_business_account.id') ?? '');
+        if ($igId === '') {
+            Log::warning('post.instagram.no_ig_account', ['response' => $me->json() ?? $me->body()]);
+
+            return ['ok' => false, 'error' => 'IG tidak terhubung ke Page / token kurang izin instagram_basic'];
+        }
 
         try {
             // 1. Buat container media.
             $container = Http::withToken($token)->timeout(30)
-                ->post("{$base}/me/media", ['image_url' => $imageUrl, 'caption' => $caption]);
+                ->post("{$base}/{$igId}/media", ['image_url' => $imageUrl, 'caption' => $caption]);
 
             $creationId = (string) $container->json('id', '');
             if (! $container->successful() || $creationId === '') {
@@ -72,7 +83,7 @@ class ContentPublisher
 
             // 2. Publish container.
             $publish = Http::withToken($token)->timeout(30)
-                ->post("{$base}/me/media_publish", ['creation_id' => $creationId]);
+                ->post("{$base}/{$igId}/media_publish", ['creation_id' => $creationId]);
         } catch (\Throwable $e) {
             return ['ok' => false, 'error' => $e->getMessage()];
         }
