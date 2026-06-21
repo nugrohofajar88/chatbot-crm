@@ -47,18 +47,18 @@ class ImageGenerator
         }
     }
 
-    /** Ambil pesan ringkas & informatif dari error provider (buang JSON mentah). */
+    /** Ambil pesan ringkas dari error provider (buang JSON/HTTP mentah; tahan walau JSON terpotong). */
     protected static function cleanError(string $provider, string $model, \Throwable $e): string
     {
         $raw = $e->getMessage();
-        $msg = $raw;
 
-        // Coba ambil error.message dari body JSON provider.
-        if (preg_match('/\{.*\}/s', $raw, $m)) {
-            $json = json_decode($m[0], true);
-            if (is_array($json) && ! empty($json['error']['message'])) {
-                $msg = (string) $json['error']['message'];
-            }
+        // Ambil nilai "message":"..." PERTAMA — bekerja walau body JSON terpotong.
+        if (preg_match('/"message"\s*:\s*"((?:[^"\\\\]|\\\\.)*)"/', $raw, $m)) {
+            $decoded = json_decode('"'.$m[1].'"');
+            $msg = is_string($decoded) ? $decoded : $m[1];
+        } else {
+            // Buang prefix "HTTP request returned status code XXX:" bila ada.
+            $msg = preg_replace('/^HTTP request returned status code \d+:\s*/i', '', $raw) ?? $raw;
         }
 
         $msg = trim($msg);
