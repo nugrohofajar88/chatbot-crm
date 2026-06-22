@@ -24,6 +24,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $title ?? (($brandName ?? 'Aterra Realty').' CRM') }}</title>
+    @if (! empty($brandLogo))
+        <link rel="icon" href="{{ $brandLogo }}">
+        <link rel="apple-touch-icon" href="{{ $brandLogo }}">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @if (! empty($themeTokens))
