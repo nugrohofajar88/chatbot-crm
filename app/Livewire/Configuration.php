@@ -3,8 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Konfigurasi teknis (level admin/developer): kunci AI, gateway WhatsApp, & Meta.
@@ -17,11 +19,17 @@ use Livewire\Component;
 #[Layout('components.layouts.app')]
 class Configuration extends Component
 {
+    use WithFileUploads;
+
     /** Nilai non-secret (text/select/bool), di-prefill & editable. */
     public array $values = [];
 
     /** Input secret — kosong artinya "jangan ubah". */
     public array $secrets = [];
+
+    /** Upload logo brand (sementara) & flag hapus. */
+    public $logoUpload = null;
+    public bool $removeLogo = false;
 
     public string $toast = '';
 
@@ -31,6 +39,7 @@ class Configuration extends Component
         ['code' => 'BRAND_NAME', 'label' => 'Nama Brand / Bisnis', 'group' => 'ai', 'type' => 'text', 'section' => 'Brand', 'section_desc' => 'Identitas brand dipakai AI (caption, scoring) DAN branding UI (judul tab, header). Persona chat diatur terpisah di menu Persona AI.'],
         ['code' => 'BRAND_SHORT', 'label' => 'Nama Pendek (logo & label "X AI")', 'group' => 'ai', 'type' => 'text', 'section' => 'Brand'],
         ['code' => 'BRAND_DESC', 'label' => 'Deskripsi Bisnis (untuk AI)', 'group' => 'ai', 'type' => 'text', 'section' => 'Brand'],
+        ['code' => 'BRAND_LOGO', 'label' => 'Logo', 'group' => 'ai', 'type' => 'logo', 'section' => 'Brand'],
 
         // ===== Tampilan =====
         ['code' => 'THEME', 'label' => 'Tema Warna', 'group' => 'ai', 'type' => 'select', 'section' => 'Tampilan', 'section_desc' => 'Skema warna aplikasi. Berlaku setelah disimpan & halaman dimuat ulang.', 'options' => ['tanah-hangat' => 'Tanah Hangat (default)', 'hutan' => 'Hutan', 'samudra' => 'Samudra', 'senja' => 'Senja', 'delima' => 'Delima (merah)', 'monokrom' => 'Monokrom']],
@@ -90,8 +99,14 @@ class Configuration extends Component
 
     public function save(): void
     {
+        $this->validate(['logoUpload' => 'nullable|image|max:2048']);
+
         foreach (self::FIELDS as $f) {
             $code = $f['code'];
+
+            if ($f['type'] === 'logo') {
+                continue; // ditangani terpisah di bawah
+            }
 
             if ($f['type'] === 'secret') {
                 $new = trim((string) ($this->secrets[$code] ?? ''));
@@ -106,7 +121,26 @@ class Configuration extends Component
             }
         }
 
+        // Logo brand.
+        if ($this->logoUpload) {
+            $this->deleteLogo();
+            Setting::put('BRAND_LOGO', $this->logoUpload->store('brand', 'public_uploads'));
+            $this->logoUpload = null;
+        } elseif ($this->removeLogo) {
+            $this->deleteLogo();
+            Setting::put('BRAND_LOGO', '');
+            $this->removeLogo = false;
+        }
+
         $this->toast = 'Konfigurasi disimpan & langsung berlaku';
+    }
+
+    protected function deleteLogo(): void
+    {
+        $old = (string) Setting::get('BRAND_LOGO', '');
+        if ($old !== '') {
+            Storage::disk('public_uploads')->delete($old);
+        }
     }
 
     /** Petunjuk secret tersimpan (4 char terakhir) tanpa membocorkan nilai penuh. */

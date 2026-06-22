@@ -79,7 +79,11 @@ class SettingsServiceProvider extends ServiceProvider
         // Branding UI tersedia di semua view (judul, logo, label "X AI").
         $brandName = ($values['BRAND_NAME'] ?? '') !== '' ? $values['BRAND_NAME'] : 'Aterra Realty';
         $brandShort = ($values['BRAND_SHORT'] ?? '') !== '' ? $values['BRAND_SHORT'] : 'Aterra';
+        $brandLogo = ($values['BRAND_LOGO'] ?? '') !== ''
+            ? \Illuminate\Support\Facades\Storage::disk('public_uploads')->url($values['BRAND_LOGO'])
+            : null;
         View::share('brandName', $brandName);
         View::share('brandShort', $brandShort);
+        View::share('brandLogo', $brandLogo);
     }
 }

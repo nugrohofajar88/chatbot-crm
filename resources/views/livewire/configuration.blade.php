@@ -78,6 +78,34 @@
                                                class="{{ $inputClass }}">
                                         @break
 
+                                    @case('logo')
+                                        @php $curLogo = \App\Models\Setting::get('BRAND_LOGO'); @endphp
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex h-[52px] w-[52px] flex-none items-center justify-center overflow-hidden rounded-[10px] border border-line-2 bg-white">
+                                                @if ($logoUpload)
+                                                    <img src="{{ $logoUpload->temporaryUrl() }}" class="h-full w-full object-cover">
+                                                @elseif ($curLogo)
+                                                    <img src="{{ Storage::disk('public_uploads')->url($curLogo) }}" class="h-full w-full object-cover">
+                                                @else
+                                                    <span class="font-serif text-[22px] font-bold text-accent">{{ mb_strtoupper(mb_substr($brandShort ?? 'A', 0, 1)) }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="inline-flex cursor-pointer items-center gap-2 rounded-[10px] border border-dashed border-line-2 bg-white px-4 py-2 text-[12.5px] font-semibold text-ink transition-colors hover:border-accent">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                                                    Pilih logo
+                                                    <input type="file" wire:model="logoUpload" accept="image/*" class="hidden">
+                                                </label>
+                                                <div wire:loading wire:target="logoUpload" class="mt-1 text-[11px] text-ink-muted">Mengunggah…</div>
+                                                @error('logoUpload')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
+                                                @if ($curLogo)
+                                                    <label class="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-ink-muted"><input type="checkbox" wire:model="removeLogo"> Hapus logo (kembali ke inisial)</label>
+                                                @endif
+                                                <p class="mt-1 text-[11px] text-ink-muted">PNG/JPG/WebP, maks 2MB. Tampil di sidebar.</p>
+                                            </div>
+                                        </div>
+                                        @break
+
                                     @default
                                         <input type="text" wire:model="values.{{ $code }}" class="{{ $inputClass }}">
                                 @endswitch

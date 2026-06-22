@@ -42,7 +42,11 @@
     <aside x-bind:class="sidebar ? 'translate-x-0' : '-translate-x-full'"
            class="fixed inset-y-0 left-0 z-40 flex w-[248px] flex-none flex-col bg-sidebar px-4 py-[22px] text-sidebar-ink transition-transform duration-200 md:static md:translate-x-0">
         <div class="flex items-center gap-3 px-2 pb-[22px] pt-1.5">
-            <div class="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-serif text-[22px] font-bold leading-none text-white">{{ mb_strtoupper(mb_substr($brandShort ?? 'A', 0, 1)) }}</div>
+            @if (! empty($brandLogo))
+                <div class="h-[34px] w-[34px] flex-none overflow-hidden rounded-[9px]"><img src="{{ $brandLogo }}" class="h-full w-full object-cover" alt="logo"></div>
+            @else
+                <div class="flex h-[34px] w-[34px] items-center justify-center rounded-[9px] bg-accent font-serif text-[22px] font-bold leading-none text-white">{{ mb_strtoupper(mb_substr($brandShort ?? 'A', 0, 1)) }}</div>
+            @endif
             <div>
                 <div class="font-serif text-[23px] font-bold leading-none text-[#F4EFE7]">{{ $brandShort ?? 'Aterra' }}</div>
                 <div class="mt-0.5 text-[10px] uppercase tracking-[2.5px] text-sidebar-muted">CRM</div>
