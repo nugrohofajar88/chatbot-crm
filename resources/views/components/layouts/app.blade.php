@@ -12,6 +12,11 @@
     ];
     $unreadTotal = (int) Conversation::sum('unread');
     $aiToday = Conversation::where('ai_enabled', true)->count();
+
+    // Tema warna aktif (menimpa CSS variable --color-*).
+    $themeKey = \App\Models\Setting::get('THEME', config('themes.default'));
+    $themeTokens = config('themes.presets.'.$themeKey.'.tokens')
+        ?? config('themes.presets.'.config('themes.default').'.tokens', []);
 @endphp
 <!DOCTYPE html>
 <html lang="id" class="h-full">
@@ -21,6 +26,9 @@
     <title>{{ $title ?? (($brandName ?? 'Aterra Realty').' CRM') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
+    @if (! empty($themeTokens))
+        <style>:root{@foreach ($themeTokens as $name => $hex)--color-{{ $name }}:{{ $hex }};@endforeach}</style>
+    @endif
     <style>[x-cloak]{display:none !important}</style>
 </head>
 <body class="h-full bg-bg font-sans text-ink antialiased">

@@ -32,6 +32,9 @@ class Configuration extends Component
         ['code' => 'BRAND_SHORT', 'label' => 'Nama Pendek (logo & label "X AI")', 'group' => 'ai', 'type' => 'text', 'section' => 'Brand'],
         ['code' => 'BRAND_DESC', 'label' => 'Deskripsi Bisnis (untuk AI)', 'group' => 'ai', 'type' => 'text', 'section' => 'Brand'],
 
+        // ===== Tampilan =====
+        ['code' => 'THEME', 'label' => 'Tema Warna', 'group' => 'ai', 'type' => 'select', 'section' => 'Tampilan', 'section_desc' => 'Skema warna aplikasi. Berlaku setelah disimpan & halaman dimuat ulang.', 'options' => ['tanah-hangat' => 'Tanah Hangat (default)', 'hutan' => 'Hutan', 'samudra' => 'Samudra', 'senja' => 'Senja', 'monokrom' => 'Monokrom']],
+
         // ===== AI: Teks (chat & caption) =====
         ['code' => 'AI_DEFAULT_PROVIDER', 'label' => 'Provider AI default', 'group' => 'ai', 'type' => 'select', 'section' => 'Teks — Chat & Caption', 'section_desc' => 'Provider & model untuk balasan chat dan caption postingan.', 'options' => ['gemini' => 'Gemini', 'openai' => 'OpenAI', 'openrouter' => 'OpenRouter']],
         ['code' => 'GEMINI_API_KEY', 'label' => 'Gemini API Key', 'group' => 'ai', 'type' => 'secret', 'section' => 'Teks — Chat & Caption'],
