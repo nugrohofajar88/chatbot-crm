@@ -10,6 +10,7 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination;
 
 /**
  * Komposer postingan AI untuk Facebook Page & Instagram.
@@ -19,6 +20,10 @@ use Livewire\WithFileUploads;
 class PostComposer extends Component
 {
     use WithFileUploads;
+    use WithPagination;
+
+    /** Tab aktif: form | history. */
+    public string $tab = 'form';
 
     public string $prompt = '';
 
@@ -131,9 +136,11 @@ class PostComposer extends Component
             'result' => $result,
         ]);
 
-        unset($this->recent);
+        unset($this->posts);
         $this->reset(['prompt', 'caption', 'image', 'imagePrompt', 'generatedImagePath', 'imageError']);
         $this->platforms = ['facebook'];
+        $this->tab = 'history';
+        $this->resetPage();
 
         $this->toast = match ($status) {
             'published' => 'Berhasil diposting 🎉',
@@ -143,9 +150,9 @@ class PostComposer extends Component
     }
 
     #[Computed]
-    public function recent()
+    public function posts()
     {
-        return Post::latest()->limit(8)->get();
+        return Post::latest()->paginate(6);
     }
 
     public function render()

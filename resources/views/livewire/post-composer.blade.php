@@ -4,6 +4,13 @@
     <div class="flex-1 overflow-y-auto p-[26px]">
         <div class="mx-auto max-w-[760px] space-y-4">
 
+            {{-- Tabs --}}
+            <div class="flex gap-1 border-b border-line">
+                <button wire:click="$set('tab','form')" class="-mb-px border-b-2 px-4 py-2.5 text-[13px] font-semibold {{ $tab === 'form' ? 'border-accent text-accent' : 'border-transparent text-ink-muted hover:text-ink' }}">Buat Postingan</button>
+                <button wire:click="$set('tab','history')" class="-mb-px border-b-2 px-4 py-2.5 text-[13px] font-semibold {{ $tab === 'history' ? 'border-accent text-accent' : 'border-transparent text-ink-muted hover:text-ink' }}">Riwayat</button>
+            </div>
+
+            @if ($tab === 'form')
             {{-- ===== Komposer ===== --}}
             <div class="rounded-[16px] border border-line bg-panel p-6">
                 {{-- Prompt --}}
@@ -84,11 +91,13 @@
                     <span class="text-[12px] text-ink-muted">Postingan langsung tampil publik di akun terpilih.</span>
                 </div>
             </div>
+            @endif
 
+            @if ($tab === 'history')
             {{-- ===== Riwayat ===== --}}
             <div class="rounded-[16px] border border-line bg-panel p-6">
                 <div class="mb-3 font-serif text-[18px] font-semibold text-ink-strong">Riwayat Postingan</div>
-                @forelse ($this->recent as $post)
+                @forelse ($this->posts as $post)
                     @php
                         $st = ['published' => ['Terbit', '#3DA35D'], 'partial' => ['Sebagian', '#C79A3A'], 'failed' => ['Gagal', '#C0562C'], 'draft' => ['Draft', '#9A958A']][$post->status] ?? ['—', '#9A958A'];
                     @endphp
@@ -112,7 +121,12 @@
                 @empty
                     <p class="text-[13px] text-ink-muted">Belum ada postingan.</p>
                 @endforelse
+
+                @if ($this->posts->hasPages())
+                    <div class="mt-4 border-t border-line pt-3">{{ $this->posts->links() }}</div>
+                @endif
             </div>
+            @endif
 
         </div>
     </div>
