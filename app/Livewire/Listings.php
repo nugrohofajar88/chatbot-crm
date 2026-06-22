@@ -10,7 +10,8 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 /**
- * CRUD katalog produk (generalisasi dari listing properti).
+ * CRUD katalog produk (generalisasi dari listing properti). Mendukung banyak
+ * media per produk: gambar & file (PDF).
  */
 #[Layout('components.layouts.app')]
 class Listings extends Component
@@ -26,9 +27,12 @@ class Listings extends Component
     public int $stock = 0;
     public string $description = '';
     public string $status = 'tersedia';
-    public $image = null;
-    public ?string $existingImage = null;
-    public bool $removeImage = false;
+
+    /** File baru yang diunggah (sementara) sebelum disimpan. */
+    public array $newFiles = [];
+
+    /** Media tersimpan: [{path,name,ext,is_image}]. */
+    public array $media = [];
 
     public string $search = '';
     public string $toast = '';
@@ -61,10 +65,19 @@ class Listings extends Component
         $this->stock = (int) $l->stock;
         $this->description = (string) $l->description;
         $this->status = $l->status ?: 'tersedia';
-        $this->existingImage = $l->imageUrl();
-        $this->image = null;
-        $this->removeImage = false;
+        $this->media = $l->media ?? [];
+        $this->newFiles = [];
         $this->showForm = true;
+    }
+
+    /** Hapus 1 media tersimpan (di form, sebelum/saat edit). */
+    public function removeMedia(int $index): void
+    {
+        if (isset($this->media[$index])) {
+            $this->deleteFile($this->media[$index]['path'] ?? null);
+            unset($this->media[$index]);
+            $this->media = array_values($this->media);
+        }
     }
 
     public function save(): void
@@ -76,20 +89,25 @@ class Listings extends Component
             'stock' => 'required|integer|min:0',
             'description' => 'nullable|string|max:2000',
             'status' => 'required|in:tersedia,habis,nonaktif',
-            'image' => 'nullable|image|max:8192',
+            'newFiles.*' => 'file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
         ]);
 
-        $listing = $this->editingId ? Listing::findOrFail($this->editingId) : new Listing;
-
-        if ($this->image) {
-            $this->deleteImage($listing->image_path);
-            $data['image_path'] = $this->image->store('listings', 'public_uploads');
-        } elseif ($this->removeImage) {
-            $this->deleteImage($listing->image_path);
-            $data['image_path'] = null;
+        // Simpan file baru ke media.
+        foreach ($this->newFiles as $file) {
+            $path = $file->store('listings', 'public_uploads');
+            $ext = strtolower($file->getClientOriginalExtension());
+            $this->media[] = [
+                'path' => $path,
+                'name' => $file->getClientOriginalName(),
+                'ext' => $ext,
+                'is_image' => in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true),
+            ];
         }
-        unset($data['image']);
 
+        unset($data['newFiles']);
+        $data['media'] = $this->media;
+
+        $listing = $this->editingId ? Listing::findOrFail($this->editingId) : new Listing;
         $listing->fill($data)->save();
 
         $this->showForm = false;
@@ -100,12 +118,14 @@ class Listings extends Component
     public function delete(int $id): void
     {
         $l = Listing::findOrFail($id);
-        $this->deleteImage($l->image_path);
+        foreach ($l->media ?? [] as $m) {
+            $this->deleteFile($m['path'] ?? null);
+        }
         $l->delete();
         $this->toast = 'Produk dihapus';
     }
 
-    protected function deleteImage(?string $path): void
+    protected function deleteFile(?string $path): void
     {
         if ($path) {
             Storage::disk('public_uploads')->delete($path);
@@ -114,7 +134,7 @@ class Listings extends Component
 
     protected function resetForm(): void
     {
-        $this->reset(['editingId', 'name', 'category', 'price', 'stock', 'description', 'image', 'existingImage', 'removeImage']);
+        $this->reset(['editingId', 'name', 'category', 'price', 'stock', 'description', 'newFiles', 'media']);
         $this->status = 'tersedia';
         $this->resetValidation();
     }

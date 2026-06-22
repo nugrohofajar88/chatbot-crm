@@ -2,18 +2,14 @@
     <x-page-header title="Katalog Produk" subtitle="Kelola produk/layanan yang ditawarkan" />
 
     <div class="flex-1 overflow-y-auto p-[26px]">
-        <div class="mx-auto max-w-[960px]">
+        <div class="mx-auto max-w-[780px]">
 
             {{-- Toolbar --}}
             <div class="mb-4 flex items-center gap-3">
-                <div class="relative flex-1">
-                    <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari produk atau kategori…"
-                           class="w-full rounded-[12px] border border-line-2 bg-white px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
-                </div>
+                <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari produk atau kategori…"
+                       class="flex-1 rounded-[12px] border border-line-2 bg-white px-4 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
                 <button wire:click="create"
-                        class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">
-                    + Produk
-                </button>
+                        class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">+ Produk</button>
             </div>
 
             @if ($toast)
@@ -23,10 +19,9 @@
             {{-- List --}}
             <div class="overflow-hidden rounded-[16px] border border-line bg-panel">
                 <table class="w-full text-[13.5px]">
-                    <thead class="bg-panel-2 text-left text-[12px] uppercase tracking-wide text-ink-muted">
+                    <thead class="bg-panel-2 text-left text-[11.5px] uppercase tracking-wide text-ink-muted">
                         <tr>
                             <th class="px-4 py-3 font-semibold">Produk</th>
-                            <th class="px-4 py-3 font-semibold">Kategori</th>
                             <th class="px-4 py-3 text-right font-semibold">Harga</th>
                             <th class="px-4 py-3 text-right font-semibold">Stok</th>
                             <th class="px-4 py-3 font-semibold">Status</th>
@@ -38,21 +33,20 @@
                             <tr class="hover:bg-panel-2/50">
                                 <td class="px-4 py-3">
                                     <div class="flex items-center gap-3">
-                                        @if ($p->imageUrl())
-                                            <img src="{{ $p->imageUrl() }}" class="h-11 w-11 rounded-[8px] border border-line object-cover" alt="">
+                                        @if ($p->coverUrl())
+                                            <img src="{{ $p->coverUrl() }}" class="h-11 w-11 flex-none rounded-[8px] border border-line object-cover" alt="">
                                         @else
-                                            <div class="flex h-11 w-11 items-center justify-center rounded-[8px] border border-line bg-panel-2 text-ink-muted">
+                                            <div class="flex h-11 w-11 flex-none items-center justify-center rounded-[8px] border border-line bg-panel-2 text-ink-muted">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                                             </div>
                                         @endif
-                                        <div>
+                                        <div class="min-w-0">
                                             <div class="font-semibold text-ink-strong">{{ $p->name }}</div>
-                                            @if ($p->description)<div class="text-[11.5px] text-ink-muted">{{ \Illuminate\Support\Str::limit($p->description, 48) }}</div>@endif
+                                            <div class="text-[11.5px] text-ink-muted">{{ $p->category ?: 'Tanpa kategori' }}@if (count($p->media ?? [])) &middot; {{ count($p->media) }} file @endif</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-ink-muted">{{ $p->category ?: '—' }}</td>
-                                <td class="px-4 py-3 text-right font-semibold text-ink">Rp {{ number_format($p->price, 0, ',', '.') }}</td>
+                                <td class="px-4 py-3 text-right font-semibold text-ink whitespace-nowrap">Rp {{ number_format($p->price, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3 text-right text-ink">{{ $p->stock }}</td>
                                 <td class="px-4 py-3">
                                     @php $st = ['tersedia' => ['Tersedia','success'], 'habis' => ['Habis','hot'], 'nonaktif' => ['Nonaktif','ink-muted']][$p->status] ?? [$p->status,'ink-muted']; @endphp
@@ -64,7 +58,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="px-4 py-12 text-center text-ink-muted">
+                            <tr><td colspan="5" class="px-4 py-12 text-center text-ink-muted">
                                 <div class="font-serif text-[18px] text-ink-strong">Belum ada produk</div>
                                 <div class="mt-1 text-[13px]">Klik "+ Produk" untuk menambah item katalog pertama.</div>
                             </td></tr>
@@ -77,31 +71,59 @@
 
     {{-- Modal form --}}
     @if ($showForm)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:key="form">
-            <div class="w-full max-w-[520px] rounded-[18px] border border-line bg-panel p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-                <div class="mb-4 flex items-center justify-between">
-                    <span class="font-serif text-[20px] font-semibold text-ink-strong">{{ $editingId ? 'Edit Produk' : 'Tambah Produk' }}</span>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6" wire:key="form">
+            <div class="flex max-h-[88vh] w-full max-w-[460px] flex-col overflow-hidden rounded-[18px] border border-line bg-panel shadow-xl">
+                <div class="flex items-center justify-between border-b border-line px-5 py-4">
+                    <span class="font-serif text-[19px] font-semibold text-ink-strong">{{ $editingId ? 'Edit Produk' : 'Tambah Produk' }}</span>
                     <button wire:click="$set('showForm', false)" class="text-ink-muted hover:text-ink">✕</button>
                 </div>
 
-                <div class="space-y-3.5">
+                <div class="flex-1 space-y-3.5 overflow-y-auto px-5 py-4">
                     <div>
                         <label class="mb-1 block text-[12.5px] font-semibold text-ink">Nama produk</label>
                         <input wire:model="name" type="text" class="w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
                         @error('name')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
                     </div>
+
+                    {{-- Media (banyak gambar / file) --}}
                     <div>
-                        <label class="mb-1 block text-[12.5px] font-semibold text-ink">Foto</label>
-                        @if ($image)
-                            <img src="{{ $image->temporaryUrl() }}" class="mb-2 max-h-36 rounded-[10px] border border-line">
-                        @elseif ($existingImage)
-                            <img src="{{ $existingImage }}" class="mb-2 max-h-36 rounded-[10px] border border-line">
-                            <label class="mb-2 flex items-center gap-2 text-[12px] text-ink-muted"><input type="checkbox" wire:model="removeImage"> Hapus foto</label>
+                        <label class="mb-1 block text-[12.5px] font-semibold text-ink">Gambar & File <span class="font-normal text-ink-muted">(boleh banyak, termasuk PDF)</span></label>
+
+                        @if (count($media) || count($newFiles))
+                            <div class="mb-2 flex flex-wrap gap-2">
+                                @foreach ($media as $i => $m)
+                                    <div class="relative">
+                                        @if ($m['is_image'] ?? false)
+                                            <img src="{{ Storage::disk('public_uploads')->url($m['path']) }}" class="h-16 w-16 rounded-[9px] border border-line object-cover">
+                                        @else
+                                            <div class="flex h-16 w-16 flex-col items-center justify-center rounded-[9px] border border-line bg-panel-2 px-1 text-center">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-hot"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+                                                <span class="mt-0.5 line-clamp-1 text-[8px] text-ink-muted">{{ \Illuminate\Support\Str::limit($m['name'] ?? 'file', 8) }}</span>
+                                            </div>
+                                        @endif
+                                        <button type="button" wire:click="removeMedia({{ $i }})" class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-hot text-[11px] text-white">✕</button>
+                                    </div>
+                                @endforeach
+
+                                @foreach ($newFiles as $f)
+                                    @php $isImg = in_array(strtolower($f->getClientOriginalExtension()), ['jpg','jpeg','png','webp']); @endphp
+                                    <div class="relative opacity-70">
+                                        @if ($isImg)
+                                            <img src="{{ $f->temporaryUrl() }}" class="h-16 w-16 rounded-[9px] border border-line object-cover">
+                                        @else
+                                            <div class="flex h-16 w-16 flex-col items-center justify-center rounded-[9px] border border-line bg-panel-2 px-1 text-center text-[8px] text-ink-muted">{{ \Illuminate\Support\Str::limit($f->getClientOriginalName(), 10) }}</div>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         @endif
-                        <input wire:model="image" type="file" accept="image/*" class="w-full text-[12.5px] text-ink-muted">
-                        <div wire:loading wire:target="image" class="mt-1 text-[11.5px] text-ink-muted">Mengunggah…</div>
-                        @error('image')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
+
+                        <input wire:model="newFiles" type="file" multiple accept="image/*,.pdf" class="w-full text-[12.5px] text-ink-muted">
+                        <div wire:loading wire:target="newFiles" class="mt-1 text-[11.5px] text-ink-muted">Mengunggah…</div>
+                        @error('newFiles.*')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
+                        <p class="mt-1 text-[11px] text-ink-muted">JPG/PNG/WebP/PDF, maks 8MB per file.</p>
                     </div>
+
                     <div>
                         <label class="mb-1 block text-[12.5px] font-semibold text-ink">Kategori</label>
                         <input wire:model="category" type="text" placeholder="mis. Makanan, Jasa" class="w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
@@ -132,9 +154,9 @@
                     </div>
                 </div>
 
-                <div class="mt-5 flex items-center justify-end gap-2">
+                <div class="flex items-center justify-end gap-2 border-t border-line px-5 py-4">
                     <button wire:click="$set('showForm', false)" class="rounded-[11px] border border-line-2 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-muted hover:border-accent/40">Batal</button>
-                    <button wire:click="save" class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">Simpan</button>
+                    <button wire:click="save" wire:loading.attr="disabled" class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">Simpan</button>
                 </div>
             </div>
         </div>

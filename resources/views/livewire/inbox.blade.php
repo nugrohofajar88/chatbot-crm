@@ -278,8 +278,8 @@
                     <div class="mt-2 flex flex-col gap-2">
                         @foreach ($this->recommendations as $r)
                             <div class="flex items-center gap-3 rounded-[13px] border border-line bg-white p-2.5">
-                                @if ($r->imageUrl())
-                                    <img src="{{ $r->imageUrl() }}" class="h-[46px] w-[46px] flex-none rounded-[9px] object-cover" alt="">
+                                @if ($r->coverUrl())
+                                    <img src="{{ $r->coverUrl() }}" class="h-[46px] w-[46px] flex-none rounded-[9px] object-cover" alt="">
                                 @else
                                     <div class="h-[46px] w-[46px] flex-none rounded-[9px]" style="background: linear-gradient(135deg,#D9CBB6,#B89B7C)"></div>
                                 @endif
