@@ -58,7 +58,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-right whitespace-nowrap">
                                     <button wire:click="edit({{ $p->id }})" class="font-semibold text-accent hover:underline">Edit</button>
-                                    <button wire:click="delete({{ $p->id }})" wire:confirm="Hapus produk ini?" class="ml-3 font-semibold text-hot hover:underline">Hapus</button>
+                                    <button wire:click="confirmDelete({{ $p->id }})" class="ml-3 font-semibold text-hot hover:underline">Hapus</button>
                                 </td>
                             </tr>
                         @empty
@@ -169,6 +169,23 @@
                 <div class="flex items-center justify-end gap-2 border-t border-line px-5 py-4">
                     <button wire:click="$set('showForm', false)" class="rounded-[11px] border border-line-2 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-muted hover:border-accent/40">Batal</button>
                     <button wire:click="save" wire:loading.attr="disabled" class="rounded-[11px] bg-accent px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">Simpan</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Modal konfirmasi hapus --}}
+    @if ($confirmingDeleteId)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6" wire:key="confirm-delete">
+            <div class="w-full rounded-[16px] border border-line bg-panel p-6 text-center" style="max-width:360px">
+                <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-hot/10 text-hot">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                </div>
+                <div class="font-serif text-[18px] font-semibold text-ink-strong">Hapus produk?</div>
+                <p class="mt-1 text-[13px] text-ink-muted">"{{ $confirmingDeleteName }}" akan dihapus permanen beserta file-nya. Tindakan ini tidak bisa dibatalkan.</p>
+                <div class="mt-5 flex justify-center gap-2">
+                    <button wire:click="$set('confirmingDeleteId', null)" class="rounded-[11px] border border-line-2 bg-white px-4 py-2.5 text-[13px] font-semibold text-ink-muted hover:border-accent/40">Batal</button>
+                    <button wire:click="delete({{ $confirmingDeleteId }})" class="rounded-[11px] bg-hot px-5 py-2.5 text-[13.5px] font-semibold text-white hover:brightness-110">Hapus</button>
                 </div>
             </div>
         </div>

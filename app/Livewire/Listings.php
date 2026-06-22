@@ -21,6 +21,9 @@ class Listings extends Component
     public bool $showForm = false;
     public ?int $editingId = null;
 
+    public ?int $confirmingDeleteId = null;
+    public string $confirmingDeleteName = '';
+
     public string $name = '';
     public string $category = '';
     public int $price = 0;
@@ -124,6 +127,12 @@ class Listings extends Component
         $this->toast = 'Produk disimpan';
     }
 
+    public function confirmDelete(int $id): void
+    {
+        $this->confirmingDeleteId = $id;
+        $this->confirmingDeleteName = Listing::find($id)?->name ?? '';
+    }
+
     public function delete(int $id): void
     {
         $l = Listing::findOrFail($id);
@@ -131,6 +140,8 @@ class Listings extends Component
             $this->deleteFile($m['path'] ?? null);
         }
         $l->delete();
+        $this->confirmingDeleteId = null;
+        $this->confirmingDeleteName = '';
         $this->toast = 'Produk dihapus';
     }
 
