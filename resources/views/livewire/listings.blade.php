@@ -122,10 +122,14 @@
                             </div>
                         @endif
 
-                        <input wire:model="newFiles" type="file" multiple accept="image/*,.pdf" class="w-full text-[12.5px] text-ink-muted">
+                        <label class="flex cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[12px] border-2 border-dashed border-line-2 bg-white px-4 py-6 text-center transition-colors hover:border-accent hover:bg-panel-2">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="text-ink-muted"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                            <span class="text-[13px] font-semibold text-ink">Klik untuk unggah di sini</span>
+                            <span class="text-[11px] text-ink-muted">Gambar atau file &middot; JPG/PNG/WebP/PDF &middot; maks 8MB per file</span>
+                            <input wire:model="newFiles" type="file" multiple accept="image/*,.pdf" class="hidden">
+                        </label>
                         <div wire:loading wire:target="newFiles" class="mt-1 text-[11.5px] text-ink-muted">Mengunggah…</div>
                         @error('newFiles.*')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
-                        <p class="mt-1 text-[11px] text-ink-muted">JPG/PNG/WebP/PDF, maks 8MB per file.</p>
                     </div>
 
                     <div>
