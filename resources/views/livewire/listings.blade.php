@@ -109,14 +109,15 @@
                                     </div>
                                 @endforeach
 
-                                @foreach ($newFiles as $f)
+                                @foreach ($newFiles as $i => $f)
                                     @php $isImg = in_array(strtolower($f->getClientOriginalExtension()), ['jpg','jpeg','png','webp']); @endphp
-                                    <div class="relative opacity-70">
+                                    <div class="relative">
                                         @if ($isImg)
                                             <img src="{{ $f->temporaryUrl() }}" class="h-16 w-16 rounded-[9px] border border-line object-cover">
                                         @else
                                             <div class="flex h-16 w-16 flex-col items-center justify-center rounded-[9px] border border-line bg-panel-2 px-1 text-center text-[8px] text-ink-muted">{{ \Illuminate\Support\Str::limit($f->getClientOriginalName(), 10) }}</div>
                                         @endif
+                                        <button type="button" wire:click="removeNewFile({{ $i }})" class="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-hot text-[11px] text-white">✕</button>
                                     </div>
                                 @endforeach
                             </div>

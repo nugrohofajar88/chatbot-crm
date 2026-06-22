@@ -80,6 +80,15 @@ class Listings extends Component
         }
     }
 
+    /** Batalkan 1 file yang baru diunggah (belum disimpan). */
+    public function removeNewFile(int $index): void
+    {
+        if (isset($this->newFiles[$index])) {
+            unset($this->newFiles[$index]);
+            $this->newFiles = array_values($this->newFiles);
+        }
+    }
+
     public function save(): void
     {
         $data = $this->validate([
