@@ -71,5 +71,17 @@ return [
             ],
         ],
 
+        'delima' => [
+            'label' => 'Delima',
+            'swatch' => '#C0314A',
+            'tokens' => [
+                'bg' => '#F5EAEC', 'header' => '#FAF2F3', 'panel' => '#FEFCFC', 'panel-2' => '#F6ECEE',
+                'line' => '#ECDCDF', 'line-2' => '#E6D2D6',
+                'sidebar' => '#2A1619', 'sidebar-ink' => '#DCC8CC', 'sidebar-muted' => '#9A8186',
+                'accent' => '#C0314A', 'accent-soft' => '#E0AAB4',
+                'ink' => '#2A1F22', 'ink-strong' => '#221A1C', 'ink-muted' => '#8C7479',
+            ],
+        ],
+
     ],
 ];
