@@ -32,8 +32,16 @@ class AiReply
         $prompt = "Riwayat percakapan:\n{$history}\n\n"
             .'Tulis SATU balasan terbaik untuk pesan terakhir pengguna, sesuai peranmu. Hanya teks balasannya, tanpa label.';
 
+        $instructions = AiPersona::instructions();
+        // Kaitkan katalog produk HANYA bila ada isinya.
+        if (($catalog = ProductCatalog::text()) !== '') {
+            $instructions .= "\n\nKatalog produk kami (acuan harga & stok):\n{$catalog}\n"
+                .'Jika pelanggan menanyakan produk/harga/stok, jawab BERDASARKAN katalog ini. '
+                .'Bila produk tidak ada di katalog, katakan belum tersedia. Jangan mengarang harga/stok.';
+        }
+
         try {
-            $res = agent(instructions: AiPersona::instructions())->prompt($prompt);
+            $res = agent(instructions: $instructions)->prompt($prompt);
 
             return trim(preg_replace('/^["\']|["\']$/', '', $res->text));
         } catch (\Throwable $e) {
