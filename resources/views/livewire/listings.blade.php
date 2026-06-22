@@ -138,9 +138,12 @@
                         <input wire:model="category" type="text" placeholder="mis. Makanan, Jasa" class="w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
                     </div>
                     <div class="grid grid-cols-2 gap-3">
-                        <div>
+                        <div x-data="{ price: @entangle('price') }">
                             <label class="mb-1 block text-[12.5px] font-semibold text-ink">Harga (Rp)</label>
-                            <input wire:model="price" type="number" min="0" class="w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
+                            <input type="text" inputmode="numeric"
+                                   x-init="$el.value = price ? Number(price).toLocaleString('id-ID') : ''"
+                                   x-on:input="let r = $el.value.replace(/[^0-9]/g,''); price = (r === '' ? 0 : parseInt(r)); $el.value = (r ? Number(r).toLocaleString('id-ID') : '')"
+                                   class="w-full rounded-[11px] border border-line-2 bg-white px-3.5 py-2.5 text-[13.5px] text-ink outline-none focus:border-accent">
                             @error('price')<span class="text-[12px] text-hot">{{ $message }}</span>@enderror
                         </div>
                         <div>
