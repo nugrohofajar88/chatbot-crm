@@ -49,8 +49,12 @@
                                 <td class="px-4 py-3 text-right font-semibold text-ink whitespace-nowrap">Rp {{ number_format($p->price, 0, ',', '.') }}</td>
                                 <td class="px-4 py-3 text-right text-ink">{{ $p->stock }}</td>
                                 <td class="px-4 py-3">
-                                    @php $st = ['tersedia' => ['Tersedia','success'], 'habis' => ['Habis','hot'], 'nonaktif' => ['Nonaktif','ink-muted']][$p->status] ?? [$p->status,'ink-muted']; @endphp
-                                    <span class="rounded-full bg-{{ $st[1] }}/10 px-2.5 py-0.5 text-[11px] font-semibold text-{{ $st[1] }}">{{ $st[0] }}</span>
+                                    @php $st = [
+                                        'tersedia' => ['Tersedia', 'bg-success/10 text-success'],
+                                        'habis' => ['Habis', 'bg-hot/10 text-hot'],
+                                        'nonaktif' => ['Nonaktif', 'bg-ink-muted/10 text-ink-muted'],
+                                    ][$p->status] ?? ['—', 'bg-ink-muted/10 text-ink-muted']; @endphp
+                                    <span class="rounded-full px-2.5 py-0.5 text-[11px] font-semibold {{ $st[1] }}">{{ $st[0] }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-right whitespace-nowrap">
                                     <button wire:click="edit({{ $p->id }})" class="font-semibold text-accent hover:underline">Edit</button>
