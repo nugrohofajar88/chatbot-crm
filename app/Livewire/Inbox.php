@@ -151,7 +151,11 @@ class Inbox extends Component
             return;
         }
 
-        $mid = $wa->sendMessage($conv->contact->phone, $body);
+        // Kirim sesuai channel: WhatsApp lewat gateway WA (pakai nomor HP);
+        // Messenger/Instagram lewat Meta Send API (pakai PSID/IGSID).
+        $mid = $conv->channel === 'whatsapp'
+            ? $wa->sendMessage($conv->contact->phone, $body)
+            : app(\App\Support\MetaService::class)->sendMessage($conv->contact->psid, $body, $conv->channel);
 
         if ($mid === null) {
             $this->toast = 'Gagal mengirim, coba lagi';
@@ -188,16 +192,24 @@ class Inbox extends Component
         $filename = $this->attachment->getClientOriginalName();
         $caption = trim($this->draft);
 
-        // 1. Coba kirim sebagai MEDIA (berfungsi di Fonnte berbayar).
         $delivery = 'failed';
-        $mid = $wa->sendMedia($conv->contact->phone, $publicUrl, $filename, $caption);
-        if ($mid !== null) {
-            $delivery = 'media';
+        $linkText = ($caption !== '' ? $caption."\n\n" : '').'📎 Lihat lampiran: '.$publicUrl;
+
+        if ($conv->channel === 'whatsapp') {
+            // 1. Coba kirim sebagai MEDIA (berfungsi di Fonnte berbayar).
+            $mid = $wa->sendMedia($conv->contact->phone, $publicUrl, $filename, $caption);
+            if ($mid !== null) {
+                $delivery = 'media';
+            } else {
+                // 2. Fallback: kirim LINK sebagai teks (andal di plan gratis / semua gateway).
+                $mid = $wa->sendMessage($conv->contact->phone, $linkText);
+                if ($mid !== null) {
+                    $delivery = 'link';
+                }
+            }
         } else {
-            // 2. Fallback: kirim LINK sebagai teks (andal di plan gratis / semua gateway).
-            //    Pola sama seperti larashop-be (link dimasukkan ke pesan teks).
-            $linkText = ($caption !== '' ? $caption."\n\n" : '').'📎 Lihat lampiran: '.$publicUrl;
-            $mid = $wa->sendMessage($conv->contact->phone, $linkText);
+            // Messenger/Instagram: Send API tanpa media → kirim link sebagai teks.
+            $mid = app(\App\Support\MetaService::class)->sendMessage($conv->contact->psid, $linkText, $conv->channel);
             if ($mid !== null) {
                 $delivery = 'link';
             }
