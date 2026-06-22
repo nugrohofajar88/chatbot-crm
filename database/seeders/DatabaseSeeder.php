@@ -107,18 +107,18 @@ class DatabaseSeeder extends Seeder
             $conv->scores()->create($lead['conv']['score_breakdown'] + ['total' => $lead['conv']['score']]);
         }
 
+        // Contoh katalog produk generik.
         $listings = [
-            ['The Pakubuwono Signature', 'SCBD, Jakarta Selatan', 2, 2, 142, 18_500_000_000, 'available'],
-            ['Villa Tepi Sawah', 'Canggu, Bali', 3, 3, 280, 12_900_000_000, 'hot'],
-            ['Townhouse Foresta', 'BSD City, Tangerang', 4, 3, 210, 4_800_000_000, 'negotiation'],
-            ['Senayan Residence', 'Senayan, Jakarta Pusat', 3, 2, 176, 21_500_000_000, 'available'],
-            ['Bintaro Park View', 'Bintaro, Tangerang Selatan', 1, 1, 24, 720_000_000, 'available'],
-            ['Ubud Jungle Villa', 'Ubud, Bali', 2, 2, 190, 9_400_000_000, 'sold'],
+            ['Kopi Susu Gula Aren', 'Minuman', 18_000, 50, 'tersedia', 'Botol 250ml, manis pas'],
+            ['Croissant Cokelat', 'Makanan', 22_000, 30, 'tersedia', 'Renyah, isi cokelat Belgia'],
+            ['Paket Hampers Lebaran', 'Bundling', 150_000, 12, 'tersedia', 'Isi 5 macam kue kering'],
+            ['Teh Lemon Segar', 'Minuman', 15_000, 0, 'habis', 'Tanpa pengawet'],
+            ['Jasa Desain Logo', 'Jasa', 350_000, 999, 'tersedia', 'Termasuk 2x revisi'],
         ];
         foreach ($listings as $l) {
             Listing::create([
-                'title' => $l[0], 'location' => $l[1], 'beds' => $l[2], 'baths' => $l[3],
-                'area' => $l[4], 'price' => $l[5], 'status' => $l[6],
+                'name' => $l[0], 'category' => $l[1], 'price' => $l[2],
+                'stock' => $l[3], 'status' => $l[4], 'description' => $l[5],
             ]);
         }
     }

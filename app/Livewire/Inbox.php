@@ -79,8 +79,8 @@ class Inbox extends Component
     public function recommendations()
     {
         return \App\Models\Listing::query()
-            ->whereIn('status', ['available', 'hot'])
-            ->orderByDesc('price')
+            ->where('status', 'tersedia')
+            ->orderByDesc('updated_at')
             ->limit(2)
             ->get();
     }

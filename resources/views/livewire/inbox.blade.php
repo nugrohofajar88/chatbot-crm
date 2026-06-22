@@ -274,14 +274,18 @@
 
                 {{-- rekomendasi properti --}}
                 <div class="px-[18px] pb-[22px] pt-3.5">
-                    <span class="text-[11px] font-semibold uppercase tracking-[1px] text-ink-muted">Rekomendasi Properti</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-[1px] text-ink-muted">Rekomendasi Produk</span>
                     <div class="mt-2 flex flex-col gap-2">
                         @foreach ($this->recommendations as $r)
-                            <div class="flex items-center gap-3 rounded-[13px] border border-[#EBE2D2] bg-white p-2.5">
-                                <div class="h-[46px] w-[46px] flex-none rounded-[9px]" style="background: linear-gradient(135deg,#D9CBB6,#B89B7C)"></div>
+                            <div class="flex items-center gap-3 rounded-[13px] border border-line bg-white p-2.5">
+                                @if ($r->imageUrl())
+                                    <img src="{{ $r->imageUrl() }}" class="h-[46px] w-[46px] flex-none rounded-[9px] object-cover" alt="">
+                                @else
+                                    <div class="h-[46px] w-[46px] flex-none rounded-[9px]" style="background: linear-gradient(135deg,#D9CBB6,#B89B7C)"></div>
+                                @endif
                                 <div class="min-w-0 flex-1">
-                                    <div class="truncate text-[12.5px] font-semibold text-[#2C2620]">{{ $r->title }}</div>
-                                    <div class="mt-px text-[11px] text-[#9C8F7E]">{{ $r->beds }} KT &middot; {{ $r->area }} m&sup2;</div>
+                                    <div class="truncate text-[12.5px] font-semibold text-ink-strong">{{ $r->name }}</div>
+                                    @if ($r->category)<div class="mt-px text-[11px] text-ink-muted">{{ $r->category }} &middot; stok {{ $r->stock }}</div>@endif
                                     <div class="mt-0.5 text-[12px] font-bold text-accent">{{ $rupiah($r->price) }}</div>
                                 </div>
                             </div>

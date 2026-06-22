@@ -5,7 +5,7 @@
         ['route' => 'inbox',     'label' => 'Kotak Masuk', 'icon' => 'chat'],
         ['route' => 'compose',   'label' => 'Buat Postingan', 'icon' => 'megaphone'],
         ['route' => 'pipeline',  'label' => 'Pipeline', 'icon' => 'bars'],
-        ['route' => 'listings',  'label' => 'Listing Properti', 'icon' => 'home'],
+        ['route' => 'listings',  'label' => 'Katalog Produk', 'icon' => 'home'],
         ['route' => 'contacts',  'label' => 'Profil Kontak', 'icon' => 'user'],
         ['route' => 'settings',  'label' => 'Pengaturan AI', 'icon' => 'cog'],
         ['route' => 'configuration', 'label' => 'Konfigurasi', 'icon' => 'sliders'],
