@@ -81,11 +81,17 @@
         </div>
 
         <div class="mt-auto flex items-center gap-3 border-t border-white/[0.07] px-2 pt-3.5">
-            <div class="flex h-[38px] w-[38px] items-center justify-center rounded-[10px] bg-[#3A322B] text-sm font-semibold text-[#E7DCCB]">DP</div>
+            <div class="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] bg-[#3A322B] text-sm font-semibold text-[#E7DCCB]">{{ mb_strtoupper(mb_substr(auth()->user()?->name ?? 'U', 0, 2)) }}</div>
             <div class="min-w-0 flex-1">
-                <div class="truncate text-[13.5px] font-semibold text-[#F0E9DD]">Dimas Prakoso</div>
+                <div class="truncate text-[13.5px] font-semibold text-[#F0E9DD]">{{ auth()->user()?->name ?? 'Pengguna' }}</div>
                 <div class="text-[11px] text-sidebar-muted">Operator</div>
             </div>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" title="Keluar" class="flex-none rounded-[9px] p-2 text-sidebar-muted transition-colors hover:bg-white/[0.06] hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+                </button>
+            </form>
         </div>
     </aside>
 
